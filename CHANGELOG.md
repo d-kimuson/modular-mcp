@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.2
+
+### &nbsp;&nbsp;&nbsp;Features
+
+- Remove get-groups command and provide info in description &nbsp;-&nbsp; by **d-kimsuon** [<samp>(069b4)</samp>](https://github.com/d-kimuson/modular-mcp/commit/069b49c)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.1...0.0.2)
+
 ## 0.0.1
 
 ### &nbsp;&nbsp;&nbsp;Features
