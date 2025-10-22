@@ -3,7 +3,6 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { toJsonSchema } from "@valibot/to-json-schema";
 import * as v from "valibot";
 import packageJson from "../package.json" with { type: "json" };
 import { ClientManager } from "./client-manager.js";
@@ -48,25 +47,53 @@ export const createServer = async (config: ServerConfig) => {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const groups = manager.listGroups();
+    const groupNames = groups.map((g) => g.name);
+    const groupsDescription = groups
+      .map((g) => `- ${g.name}: ${g.description}`)
+      .join("\n");
+
     return {
       tools: [
         {
-          name: "get-tool-groups",
-          description:
-            "IMPORTANT: Call this tool at the beginning of every session to understand your capabilities. This server may provide access to hundreds of tools across multiple MCP groups, and you need to know what's available before starting any task. Returns a lightweight list of group names and descriptions without loading heavy tool schemas, enabling you to efficiently discover what you can do. Always start by calling this to assess your full toolkit - you cannot effectively help users without first understanding what capabilities you have access to.",
-          inputSchema: toJsonSchema(v.object({})),
+          name: "get-modular-tools",
+          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}`,
+          inputSchema: {
+            type: "object",
+            properties: {
+              group: {
+                type: "string",
+                description: "The name of the MCP group to get tools from",
+                enum: groupNames,
+              },
+            },
+            required: ["group"],
+          },
         },
         {
-          name: "get-tools",
+          name: "call-modular-tool",
           description:
-            "Get all tools available in a specific MCP group. Returns tool names, descriptions, and input schemas. Use this when you need to understand what tools are available in a specific group before making tool calls. This prevents context pollution by loading only the tools you actually need to examine, rather than all tools from all groups.",
-          inputSchema: toJsonSchema(getToolsSchema),
-        },
-        {
-          name: "call-tool",
-          description:
-            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use this after exploring groups with get-tool-groups and examining specific tools with get-tools. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.",
-          inputSchema: toJsonSchema(callToolSchema),
+            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use get-modular-tools first to discover available tools and their input schemas in the specified group, then use this tool to execute them. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              group: {
+                type: "string",
+                description: "The name of the MCP group containing the tool",
+                enum: groupNames,
+              },
+              name: {
+                type: "string",
+                description: "The name of the tool to execute",
+              },
+              args: {
+                type: "object",
+                description: "Arguments to pass to the tool",
+                additionalProperties: true,
+              },
+            },
+            required: ["group", "name"],
+          },
         },
       ],
     };
@@ -76,16 +103,7 @@ export const createServer = async (config: ServerConfig) => {
     const { name, arguments: args } = request.params;
 
     switch (name) {
-      case "get-tool-groups":
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(manager.listGroups(), null, 2),
-            },
-          ],
-        };
-      case "get-tools": {
+      case "get-modular-tools": {
         const parsedArgs = v.safeParse(getToolsSchema, args);
         if (!parsedArgs.success) {
           return {
@@ -123,7 +141,7 @@ export const createServer = async (config: ServerConfig) => {
           ],
         };
       }
-      case "call-tool": {
+      case "call-modular-tool": {
         const parsedArgs = v.safeParse(callToolSchema, args);
         if (!parsedArgs.success) {
           return {

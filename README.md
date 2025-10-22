@@ -6,76 +6,45 @@ A Model Context Protocol (MCP) proxy server that enables efficient management of
 
 Traditional MCP setups can overwhelm LLM context when dealing with numerous tools from multiple servers. Modular MCP solves this by:
 
-- **Context Efficiency**: Only loads high-level group information initially, preventing context pollution
+- **Context Efficiency**: Group information is embedded in tool descriptions, so LLMs can discover available groups without making any tool calls
 - **On-Demand Loading**: Retrieves detailed tool schemas only when needed for specific groups
 - **Separation of Concerns**: Maintains clear phases between tool discovery and execution
 - **Proxy Architecture**: Acts as a single MCP endpoint that manages multiple upstream MCP servers
 
-## Workflow
+## How it works?
 
-1. **Discovery Phase**: Use `get-tool-groups` to see available tool groups without loading schemas
-2. **Exploration Phase**: Use `get-tools` to examine specific groups you're interested in
-3. **Execution Phase**: Use `call-tool` to execute tools from the examined groups
+### 1. Configuration
 
-This approach enables efficient management of large tool collections while keeping context usage minimal.
+Create a configuration file (e.g., `modular-mcp.json`) for the upstream MCP servers you want to manage. This uses the standard MCP server configuration format, with one addition: a `description` field for each server.
 
-## Configuration
-
-This guide shows how to migrate your existing MCP configuration to use Modular MCP. We'll use Claude Code (`.mcp.json`) as an example, but the same approach works for other MCP clients.
-
-### Step 1: Identify Your Existing MCP Servers
-
-If you're using Claude Code, your `.mcp.json` might look like this:
-
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"],
-      "env": {}
-    }
-  }
-}
-```
-
-### Step 2: Create Modular MCP Configuration
-
-Create a new configuration file (e.g., `modular-mcp.json`) and move your MCP server configurations there. Add a `description` field to each server to help the LLM understand what tools each group provides:
+Here's an example using Context7 and Playwright MCP servers:
 
 ```diff
 {
   "mcpServers": {
-    "playwright": {
-+     "description": "Use when you need to control or automate web browsers.",
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
     "context7": {
 +     "description": "Use when you need to search library documentation.",
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
+    },
+    "playwright": {
++     "description": "Use when you need to control or automate web browsers.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
     }
   }
 }
 ```
 
-**Key Addition**: The `description` field allows the LLM to understand each tool group's purpose without loading detailed schemas, keeping context usage minimal.
+The `description` field is the only extension to the standard MCP configuration. It helps the LLM understand each tool group's purpose without loading detailed tool schemas.
 
-### Step 3: Update Your MCP Client Configuration
+### 2. Register Modular MCP
 
-Replace your original MCP server configurations in `.mcp.json` with the Modular MCP proxy:
+Register Modular MCP in your MCP client configuration (e.g., `.mcp.json` for Claude Code):
 
 ```json
 {
@@ -90,27 +59,45 @@ Replace your original MCP server configurations in `.mcp.json` with the Modular 
 }
 ```
 
-Now all your MCP servers are managed through Modular MCP, with on-demand tool loading.
+### 3. Two Tools Registration
 
-## Example Usage
+When Modular MCP starts, it registers only two tools to the LLM:
 
-1. **List available tool groups**:
-   ```
-   get-tool-groups
-   ```
-   Returns group names and descriptions without loading tool schemas.
+- `get-modular-tools`: Retrieves tool name and schemas for a specific group
+- `call-modular-tool`: Executes a tool from a specific group
 
-2. **Examine specific group tools**:
-   ```
-   get-tools with group="playwright"
-   ```
-   Loads only the tools from the playwright group.
+The `get-modular-tools` tool description includes information about available groups, like this:
 
-3. **Execute a tool**:
-   ```
-   call-tool with group="playwright", name="browser_navigate", args={"url": "https://example.com"}
-   ```
-   Executes the tool through the appropriate upstream MCP server.
+```
+modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.
+
+Use this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.
+
+Available groups:
+- context7: Use when you need to search library documentation.
+- playwright: Use when you need to control or automate web browsers.
+```
+
+This description is passed to the LLM as part of the system prompt, allowing it to discover available groups without making any tool calls.
+
+### 4. On-Demand Tool Loading
+
+The LLM can now load and use tools on a per-group basis:
+
+1. **Discovery**: The LLM sees available groups in the tool description (no tool calls needed)
+2. **Exploration**: When the LLM needs playwright tools, it calls `get-modular-tools` with `group="playwright"`
+3. **Execution**: The LLM uses `call-modular-tool` to execute specific tools like `browser_navigate`
+
+For example, to automate a web browser:
+```
+get-modular-tools(group="playwright")
+→ Returns all playwright tool schemas
+
+call-modular-tool(group="playwright", name="browser_navigate", args={"url": "https://example.com"})
+→ Executes the navigation through the playwright MCP server
+```
+
+This workflow keeps context usage minimal while providing access to all tools when needed.
 
 ## Benefits
 
