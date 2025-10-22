@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "description": "Tools related to playwright, automation browser.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    }
+  }
+}
