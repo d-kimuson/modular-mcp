@@ -1,14 +1,36 @@
 {
-  "name": "modular-mcp",
+  "name": "@kimuson/modular-mcp",
   "version": "0.0.0",
   "description": "Modular MCP - Modular tool access for reducing context overhead",
   "type": "module",
   "bin": {
     "modular-mcp": "./dist/index.js"
   },
+  "author": "d-kimuson",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d-kimuson/modular-mcp.git"
+  },
+  "homepage": "https://github.com/d-kimuson/modular-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/d-kimuson/modular-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm",
+    "claude",
+    "context-optimization"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "config.example.json"
+  ],
   "packageManager": "pnpm@10.19.0+sha512.c9fc7236e92adf5c8af42fd5bf1612df99c2ceb62f27047032f4720b33f8eacdde311865e91c411f2774f618d82f320808ecb51718bfa82c060c4ba7c76a32b8",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "build": "esbuild ./src/index.ts --format=esm --platform=node --bundle --packages=external --outdir=dist",
@@ -18,9 +40,16 @@
     "fix": "run-s 'fix:*'",
     "fix:biome-format": "biome format --write .",
     "fix:biome-lint": "biome check --write --unsafe .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "release-it",
+    "prepublishOnly": "pnpm run build"
   },
   "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "@valibot/to-json-schema": "^1.3.0",
+    "valibot": "^1.1.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.2.6",
     "@tsconfig/node22": "^22.0.2",
@@ -28,11 +57,8 @@
     "@types/node": "^24.9.1",
     "esbuild": "^0.25.11",
     "npm-run-all2": "^8.0.4",
+    "release-it": "^19.0.5",
+    "release-it-pnpm": "^4.6.6",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.1",
-    "@valibot/to-json-schema": "^1.3.0",
-    "valibot": "^1.1.0"
   }
 }

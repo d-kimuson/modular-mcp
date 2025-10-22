@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a TypeScript-based project configured with strict type checking and modern tooling. The project uses:
 - **Package Manager**: pnpm (v10.19.0+)
-- **Node Version**: >=22.18.0
+- **Node Version**: >=22.0.0
 - **TypeScript**: Configured with strictest settings via `@tsconfig/strictest` and `@tsconfig/node22`
 - **Code Quality**: Biome for linting and formatting
 - **Module System**: ES modules (`"type": "module"`)
