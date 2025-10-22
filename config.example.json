@@ -1,10 +1,17 @@
 {
   "mcpServers": {
     "playwright": {
-      "description": "Tools related to playwright, automation browser.",
+      "description": "Use when you need to control or automate web browsers.",
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    },
+    "context7": {
+      "description": "Use when you need to search library documentation.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
     }
   }
