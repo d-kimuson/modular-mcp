@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "@tsconfig/node22/tsconfig.json",
+    "@tsconfig/strictest/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src"]
+}

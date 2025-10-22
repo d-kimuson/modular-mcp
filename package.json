@@ -1,0 +1,28 @@
+{
+  "name": "modular-mcp",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "packageManager": "pnpm@10.19.0+sha512.c9fc7236e92adf5c8af42fd5bf1612df99c2ceb62f27047032f4720b33f8eacdde311865e91c411f2774f618d82f320808ecb51718bfa82c060c4ba7c76a32b8",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "lint": "run-s 'lint:*'",
+    "lint:biome-format": "biome format .",
+    "lint:biome-lint": "biome check .",
+    "fix": "run-s 'fix:*'",
+    "fix:biome-format": "biome format --write .",
+    "fix:biome-lint": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.6",
+    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/strictest": "^2.0.6",
+    "@types/node": "^24.9.1",
+    "npm-run-all2": "^8.0.4",
+    "typescript": "^5.9.3"
+  }
+}
