@@ -21,6 +21,7 @@ Here's an example using Context7 and Playwright MCP servers:
 
 ```diff
 {
++ "$schema": "https://raw.githubusercontent.com/d-kimuson/modular-mcp/refs/heads/main/config-schema.json",
   "mcpServers": {
     "context7": {
 +     "description": "Use when you need to search library documentation.",

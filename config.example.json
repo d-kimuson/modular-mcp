@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/d-kimuson/modular-mcp/refs/heads/main/config-schema.json",
   "mcpServers": {
     "playwright": {
       "description": "Use when you need to control or automate web browsers.",
