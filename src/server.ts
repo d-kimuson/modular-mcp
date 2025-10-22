@@ -53,19 +53,19 @@ export const createServer = async (config: ServerConfig) => {
         {
           name: "get-tool-groups",
           description:
-            "List all available MCP server groups. Returns group names and descriptions. Call this first to discover available tool groups.",
+            "IMPORTANT: Call this tool at the beginning of every session to understand your capabilities. This server may provide access to hundreds of tools across multiple MCP groups, and you need to know what's available before starting any task. Returns a lightweight list of group names and descriptions without loading heavy tool schemas, enabling you to efficiently discover what you can do. Always start by calling this to assess your full toolkit - you cannot effectively help users without first understanding what capabilities you have access to.",
           inputSchema: toJsonSchema(v.object({})),
         },
         {
           name: "get-tools",
           description:
-            "Get all tools available in a specific MCP group. Returns tool names, descriptions, and input schemas.",
+            "Get all tools available in a specific MCP group. Returns tool names, descriptions, and input schemas. Use this when you need to understand what tools are available in a specific group before making tool calls. This prevents context pollution by loading only the tools you actually need to examine, rather than all tools from all groups.",
           inputSchema: toJsonSchema(getToolsSchema),
         },
         {
           name: "call-tool",
           description:
-            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server.",
+            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use this after exploring groups with get-tool-groups and examining specific tools with get-tools. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.",
           inputSchema: toJsonSchema(callToolSchema),
         },
       ],
