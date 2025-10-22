@@ -1,6 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import packageJson from "../package.json" with { type: "json" };
+import { getTransport } from "./transport.js";
 import type { McpGroupInfo, McpServerConfig, ToolInfo } from "./types.js";
 
 export class ClientManager {
@@ -10,7 +11,7 @@ export class ClientManager {
       name: string;
       description: string;
       client: Client;
-      transport: StdioClientTransport;
+      transport: Transport;
       tools: ToolInfo[];
     }
   >();
@@ -30,11 +31,7 @@ export class ClientManager {
       },
     );
 
-    const transport = new StdioClientTransport({
-      command: config.command,
-      args: config.args,
-      env: config.env,
-    });
+    const transport = getTransport(config);
 
     await client.connect(transport);
     const { tools } = await client.listTools();
