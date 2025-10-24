@@ -30,9 +30,13 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  await Promise.all(
+  await Promise.allSettled(
     mcpGroups.map(async ([name, config]) => {
-      await manager.connect(name, config);
+      try {
+        await manager.connect(name, config);
+      } catch (error) {
+        manager.recordFailedConnection(name, config, error);
+      }
     }),
   );
 
@@ -53,11 +57,19 @@ export const createServer = async (config: ServerConfig) => {
       .map((g) => `- ${g.name}: ${g.description}`)
       .join("\n");
 
+    const failedGroups = manager.listFailedGroups();
+    const unavailableGroupsDescription =
+      failedGroups.length > 0
+        ? `\n\nUnavailable groups (connection failed):\n${failedGroups
+            .map((g) => `- ${g.name}: ${g.description} (Error: ${g.error})`)
+            .join("\n")}`
+        : "";
+
     return {
       tools: [
         {
           name: "get-modular-tools",
-          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}`,
+          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}`,
           inputSchema: {
             type: "object",
             properties: {
