@@ -30,11 +30,32 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  await Promise.allSettled(
+  const connectionResults = await Promise.allSettled(
     mcpGroups.map(async ([name, config]) => {
       await manager.connect(name, config);
+      return name;
     }),
   );
+
+  const unavailableGroups = connectionResults
+    .map((result, index) => {
+      const group = mcpGroups[index];
+      if (result.status === "rejected" && group !== undefined) {
+        return {
+          name: group[0],
+          description: group[1].description,
+          error:
+            result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason),
+        };
+      }
+      return null;
+    })
+    .filter(
+      (group): group is { name: string; description: string; error: string } =>
+        group !== null,
+    );
 
   const server = new Server(
     {
@@ -53,11 +74,18 @@ export const createServer = async (config: ServerConfig) => {
       .map((g) => `- ${g.name}: ${g.description}`)
       .join("\n");
 
+    const unavailableGroupsDescription =
+      unavailableGroups.length > 0
+        ? `\n\nUnavailable groups (connection failed):\n${unavailableGroups
+            .map((g) => `- ${g.name}: ${g.description} (Error: ${g.error})`)
+            .join("\n")}`
+        : "";
+
     return {
       tools: [
         {
           name: "get-modular-tools",
-          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}`,
+          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}`,
           inputSchema: {
             type: "object",
             properties: {
