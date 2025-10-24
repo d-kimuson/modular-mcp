@@ -17,7 +17,7 @@ type GroupState =
       status: "failed";
       name: string;
       description: string;
-      error: string;
+      error: Error;
     };
 
 export class ClientManager {
@@ -62,7 +62,7 @@ export class ClientManager {
       status: "failed",
       name: groupName,
       description: config.description,
-      error: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error ? error : new Error(String(error)),
     });
   }
 
@@ -91,7 +91,7 @@ export class ClientManager {
       .map(({ name, description, error }) => ({
         name,
         description,
-        error,
+        error: error.stack ?? error.message,
       }));
   }
 

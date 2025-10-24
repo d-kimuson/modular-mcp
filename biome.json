@@ -15,7 +15,12 @@
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "suspicious": {
+        "noConsole": "error"
+      }
+    }
   },
   "javascript": {
     "formatter": {

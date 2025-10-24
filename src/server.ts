@@ -6,6 +6,7 @@ import {
 import * as v from "valibot";
 import packageJson from "../package.json" with { type: "json" };
 import { ClientManager } from "./client-manager.js";
+import { logger } from "./logger.js";
 import type { ServerConfig } from "./types.js";
 
 const getToolsSchema = v.object({
@@ -39,6 +40,22 @@ export const createServer = async (config: ServerConfig) => {
       }
     }),
   );
+
+  if (manager.listFailedGroups().length === 0) {
+    logger.info(
+      `Successfully connected ${manager.listGroups().length} MCP groups. All groups are valid.`,
+    );
+  } else {
+    logger.warn(
+      `Some MCP groups failed to connect. success_groups=[${manager
+        .listGroups()
+        .map((g) => g.name)
+        .join(", ")}], failed_groups=[${manager
+        .listFailedGroups()
+        .map((g) => g.name)
+        .join(", ")}]`,
+    );
+  }
 
   const server = new Server(
     {
