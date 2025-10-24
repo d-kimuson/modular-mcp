@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.3
+
+### &nbsp;&nbsp;&nbsp;Features
+
+- Make "type" field optional with "stdio" as default &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(935a2)</samp>](https://github.com/d-kimuson/modular-mcp/commit/935a289)
+- Use Promise.allSettled instead of Promise.all for resilient startup &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(a6d6f)</samp>](https://github.com/d-kimuson/modular-mcp/commit/a6d6f04)
+- Add unavailable groups section to inform LLM about failed connections &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(2499a)</samp>](https://github.com/d-kimuson/modular-mcp/commit/2499a31)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.2...0.0.3)
+
 ## 0.0.2
 
 ### &nbsp;&nbsp;&nbsp;Features
