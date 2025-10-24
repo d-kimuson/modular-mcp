@@ -30,7 +30,7 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  await Promise.all(
+  await Promise.allSettled(
     mcpGroups.map(async ([name, config]) => {
       await manager.connect(name, config);
     }),

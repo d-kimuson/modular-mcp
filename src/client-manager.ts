@@ -108,6 +108,6 @@ export class ClientManager {
     const disconnectPromises = Array.from(this.groups.keys()).map((groupName) =>
       this.disconnect(groupName),
     );
-    await Promise.all(disconnectPromises);
+    await Promise.allSettled(disconnectPromises);
   }
 }
