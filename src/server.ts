@@ -30,32 +30,15 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  const connectionResults = await Promise.allSettled(
+  await Promise.allSettled(
     mcpGroups.map(async ([name, config]) => {
-      await manager.connect(name, config);
-      return name;
+      try {
+        await manager.connect(name, config);
+      } catch (error) {
+        manager.recordFailedConnection(name, config, error);
+      }
     }),
   );
-
-  const unavailableGroups = connectionResults
-    .map((result, index) => {
-      const group = mcpGroups[index];
-      if (result.status === "rejected" && group !== undefined) {
-        return {
-          name: group[0],
-          description: group[1].description,
-          error:
-            result.reason instanceof Error
-              ? result.reason.message
-              : String(result.reason),
-        };
-      }
-      return null;
-    })
-    .filter(
-      (group): group is { name: string; description: string; error: string } =>
-        group !== null,
-    );
 
   const server = new Server(
     {
@@ -74,9 +57,10 @@ export const createServer = async (config: ServerConfig) => {
       .map((g) => `- ${g.name}: ${g.description}`)
       .join("\n");
 
+    const failedGroups = manager.listFailedGroups();
     const unavailableGroupsDescription =
-      unavailableGroups.length > 0
-        ? `\n\nUnavailable groups (connection failed):\n${unavailableGroups
+      failedGroups.length > 0
+        ? `\n\nUnavailable groups (connection failed):\n${failedGroups
             .map((g) => `- ${g.name}: ${g.description} (Error: ${g.error})`)
             .join("\n")}`
         : "";

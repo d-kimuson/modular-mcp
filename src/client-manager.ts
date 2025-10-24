@@ -4,17 +4,24 @@ import packageJson from "../package.json" with { type: "json" };
 import { getTransport } from "./transport.js";
 import type { McpGroupInfo, McpServerConfig, ToolInfo } from "./types.js";
 
-export class ClientManager {
-  private groups = new Map<
-    string,
-    {
+type GroupState =
+  | {
+      status: "connected";
       name: string;
       description: string;
       client: Client;
       transport: Transport;
       tools: ToolInfo[];
     }
-  >();
+  | {
+      status: "failed";
+      name: string;
+      description: string;
+      error: string;
+    };
+
+export class ClientManager {
+  private groups = new Map<string, GroupState>();
 
   async connect(groupName: string, config: McpServerConfig): Promise<void> {
     if (this.groups.has(groupName)) {
@@ -37,6 +44,7 @@ export class ClientManager {
     const { tools } = await client.listTools();
 
     this.groups.set(groupName, {
+      status: "connected",
       name: groupName,
       description: config.description,
       client,
@@ -45,17 +53,55 @@ export class ClientManager {
     });
   }
 
+  recordFailedConnection(
+    groupName: string,
+    config: McpServerConfig,
+    error: unknown,
+  ): void {
+    this.groups.set(groupName, {
+      status: "failed",
+      name: groupName,
+      description: config.description,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   listGroups(): McpGroupInfo[] {
-    return Array.from(this.groups.values()).map(({ name, description }) => ({
-      name,
-      description,
-    }));
+    return Array.from(this.groups.values())
+      .filter(
+        (group): group is Extract<GroupState, { status: "connected" }> =>
+          group.status === "connected",
+      )
+      .map(({ name, description }) => ({
+        name,
+        description,
+      }));
+  }
+
+  listFailedGroups(): Array<{
+    name: string;
+    description: string;
+    error: string;
+  }> {
+    return Array.from(this.groups.values())
+      .filter(
+        (group): group is Extract<GroupState, { status: "failed" }> =>
+          group.status === "failed",
+      )
+      .map(({ name, description, error }) => ({
+        name,
+        description,
+        error,
+      }));
   }
 
   async listTools(groupName: string): Promise<ToolInfo[]> {
     const group = this.groups.get(groupName);
     if (!group) {
       throw new Error(`Not connected to group: ${groupName}`);
+    }
+    if (group.status === "failed") {
+      throw new Error(`Group ${groupName} failed to connect: ${group.error}`);
     }
 
     return group.tools;
@@ -69,12 +115,15 @@ export class ClientManager {
     content: Array<{ type: string; text?: string; [key: string]: unknown }>;
     isError?: boolean;
   }> {
-    const groups = this.groups.get(groupName);
-    if (!groups) {
+    const group = this.groups.get(groupName);
+    if (!group) {
       throw new Error(`Not connected to group: ${groupName}`);
     }
+    if (group.status === "failed") {
+      throw new Error(`Group ${groupName} failed to connect: ${group.error}`);
+    }
 
-    const response = await groups.client.callTool({
+    const response = await group.client.callTool({
       name: toolName,
       arguments: args,
     });
@@ -98,8 +147,10 @@ export class ClientManager {
       return;
     }
 
-    await group.client.close();
-    await group.transport.close();
+    if (group.status === "connected") {
+      await group.client.close();
+      await group.transport.close();
+    }
 
     this.groups.delete(groupName);
   }
