@@ -25,14 +25,14 @@ Here's an example using Context7 and Playwright MCP servers:
   "mcpServers": {
     "context7": {
 +     "description": "Use when you need to search library documentation.",
-      "type": "stdio",
+-     "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
     },
     "playwright": {
 +     "description": "Use when you need to control or automate web browsers.",
-      "type": "stdio",
+-     "type": "stdio",
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"],
       "env": {}
@@ -42,6 +42,8 @@ Here's an example using Context7 and Playwright MCP servers:
 ```
 
 The `description` field is the only extension to the standard MCP configuration. It helps the LLM understand each tool group's purpose without loading detailed tool schemas.
+
+**Note**: The `type` field defaults to `"stdio"` if not specified. For `stdio` type servers, you can omit the `type` field for cleaner configuration.
 
 ### 2. Register Modular MCP
 

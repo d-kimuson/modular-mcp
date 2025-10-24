@@ -10,7 +10,8 @@
             "type": "object",
             "properties": {
               "type": {
-                "const": "stdio"
+                "const": "stdio",
+                "default": "stdio"
               },
               "description": {
                 "type": "string"
@@ -31,11 +32,7 @@
                 }
               }
             },
-            "required": [
-              "type",
-              "description",
-              "command"
-            ]
+            "required": ["description", "command"]
           },
           {
             "type": "object",
@@ -56,11 +53,7 @@
                 }
               }
             },
-            "required": [
-              "type",
-              "description",
-              "url"
-            ]
+            "required": ["type", "description", "url"]
           },
           {
             "type": "object",
@@ -81,17 +74,11 @@
                 }
               }
             },
-            "required": [
-              "type",
-              "description",
-              "url"
-            ]
+            "required": ["type", "description", "url"]
           }
         ]
       }
     }
   },
-  "required": [
-    "mcpServers"
-  ]
+  "required": ["mcpServers"]
 }
