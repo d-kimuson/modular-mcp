@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 export const mcpServerConfigSchema = v.union([
   v.object({
-    type: v.literal("stdio"),
+    type: v.optional(v.literal("stdio"), "stdio"),
     /** Description of what this MCP server group provides */
     description: v.string(),
     command: v.string(),
