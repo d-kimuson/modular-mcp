@@ -29,8 +29,29 @@ export const mcpServerConfigSchema = v.union([
 
 export type McpServerConfig = v.InferOutput<typeof mcpServerConfigSchema>;
 
+// Category-related schemas
+export const toolOverridesSchema = v.object({
+  enabled: v.optional(v.boolean(), true),
+  description: v.optional(v.string()),
+});
+
+export type ToolOverrides = v.InferOutput<typeof toolOverridesSchema>;
+
+export const categoryConfigSchema = v.object({
+  description: v.string(),
+  server: v.string(),
+  tools: v.object({
+    includeNames: v.array(v.string()),
+    // Future: includePatterns, excludePatterns
+    overrides: v.optional(v.record(v.string(), toolOverridesSchema)),
+  }),
+});
+
+export type CategoryConfig = v.InferOutput<typeof categoryConfigSchema>;
+
 export const serverConfigSchema = v.object({
   mcpServers: v.record(v.string(), mcpServerConfigSchema),
+  categories: v.optional(v.record(v.string(), categoryConfigSchema)),
 });
 
 export type ServerConfig = v.InferOutput<typeof serverConfigSchema>;
@@ -42,6 +63,15 @@ export interface McpGroupInfo {
   description: string;
 }
 
+export interface CategoryInfo {
+  /** Category name (key from categories config) */
+  name: string;
+  /** Description of what this category provides */
+  description: string;
+  /** Source server name */
+  server: string;
+}
+
 export interface ToolInfo {
   name: string;
   description?: string;
@@ -51,4 +81,13 @@ export interface ToolInfo {
     required?: string[];
     $schema?: string;
   };
+}
+
+export interface ResolvedCategory {
+  name: string;
+  description: string;
+  server: string;
+  tools: Map<string, ToolInfo>;
+  enabledTools: Set<string>;
+  overrides: Map<string, ToolOverrides>;
 }
