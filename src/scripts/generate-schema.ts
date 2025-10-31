@@ -1,13 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { toJsonSchema } from "@valibot/to-json-schema";
-import * as v from "valibot";
-import { mcpServerConfigSchema } from "../types.js";
+import { serverConfigSchema } from "../types.js";
 
-const configJsonSchema = await toJsonSchema(
-  v.object({
-    mcpServers: v.record(v.string(), mcpServerConfigSchema),
-  }),
-);
+const configJsonSchema = await toJsonSchema(serverConfigSchema);
 
 await writeFile(
   "config-schema.json",

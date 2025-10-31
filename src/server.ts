@@ -19,9 +19,24 @@ const callToolSchema = v.object({
   args: v.record(v.string(), v.any()),
 });
 
+const getCategoryToolsSchema = v.object({
+  category: v.string(),
+});
+
+const callCategoryToolSchema = v.object({
+  category: v.string(),
+  name: v.string(),
+  args: v.record(v.string(), v.any()),
+});
+
 export const createServer = async (config: ServerConfig) => {
   const manager = new ClientManager();
   const mcpGroups = Object.entries(config.mcpServers);
+
+  // Initialize categories if present
+  if (config.categories) {
+    manager.initCategories(config.categories);
+  }
 
   const cleanup = async () => {
     await manager.disconnectAll();
@@ -68,6 +83,63 @@ export const createServer = async (config: ServerConfig) => {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const categories = manager.listCategories();
+    const hasCategories = categories.length > 0;
+
+    if (hasCategories) {
+      // Category mode: Use new category-based tools
+      const categoryNames = categories.map((c) => c.name);
+      const categoriesDescription = categories
+        .map((c) => `- ${c.name}: ${c.description}`)
+        .join("\n");
+
+      return {
+        tools: [
+          {
+            name: "get-category-tools",
+            description: `Retrieve available tools for a specific category. This MCP server organizes tools by category, allowing you to load only the tool schemas you need.\n\nAvailable categories:\n${categoriesDescription}\n\nWorkflow:\n1. Call this tool with a category name to get available tool schemas\n2. Use call-category-tool to execute the tools`,
+            inputSchema: {
+              type: "object",
+              properties: {
+                category: {
+                  type: "string",
+                  description: "The name of the category to get tools from",
+                  enum: categoryNames,
+                },
+              },
+              required: ["category"],
+            },
+          },
+          {
+            name: "call-category-tool",
+            description:
+              "Execute a tool from a specific category. Proxies the call to the appropriate upstream MCP server.\n\nWorkflow:\n1. First call get-category-tools to discover available tools and their schemas\n2. Then use this tool to execute them with the appropriate arguments",
+            inputSchema: {
+              type: "object",
+              properties: {
+                category: {
+                  type: "string",
+                  description: "The name of the category containing the tool",
+                  enum: categoryNames,
+                },
+                name: {
+                  type: "string",
+                  description: "The name of the tool to execute",
+                },
+                args: {
+                  type: "object",
+                  description: "Arguments to pass to the tool",
+                  additionalProperties: true,
+                },
+              },
+              required: ["category", "name", "args"],
+            },
+          },
+        ],
+      };
+    }
+
+    // Legacy group mode: Use original group-based tools
     const groups = manager.listGroups();
     const groupNames = groups.map((g) => g.name);
     const groupsDescription = groups
@@ -132,6 +204,92 @@ export const createServer = async (config: ServerConfig) => {
     const { name, arguments: args } = request.params;
 
     switch (name) {
+      case "get-category-tools": {
+        const parsedArgs = v.safeParse(getCategoryToolsSchema, args);
+        if (!parsedArgs.success) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  error: parsedArgs.issues,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        try {
+          const result = await manager.getCategoryTools(parsedArgs.output.category);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(result),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  error: error instanceof Error ? error.message : String(error),
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      case "call-category-tool": {
+        const parsedArgs = v.safeParse(callCategoryToolSchema, args);
+        if (!parsedArgs.success) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  error: parsedArgs.issues,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        try {
+          const result = await manager.callCategoryTool(
+            parsedArgs.output.category,
+            parsedArgs.output.name,
+            parsedArgs.output.args,
+          );
+
+          return {
+            content: result.content,
+            isError: result.isError,
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  error: error instanceof Error ? error.message : String(error),
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
       case "get-modular-tools": {
         const parsedArgs = v.safeParse(getToolsSchema, args);
         if (!parsedArgs.success) {

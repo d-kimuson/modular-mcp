@@ -89,6 +89,54 @@
           }
         ]
       }
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "server": {
+            "type": "string"
+          },
+          "tools": {
+            "type": "object",
+            "properties": {
+              "includeNames": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "overrides": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "includeNames"
+            ]
+          }
+        },
+        "required": [
+          "description",
+          "server",
+          "tools"
+        ]
+      }
     }
   },
   "required": [
