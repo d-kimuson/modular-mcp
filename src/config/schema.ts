@@ -25,8 +25,6 @@ export const mcpServerConfigSchema = v.union([
   }),
 ]);
 
-// SSEClientTransport
-
 export type McpServerConfig = v.InferOutput<typeof mcpServerConfigSchema>;
 
 export const serverConfigSchema = v.object({
@@ -34,21 +32,3 @@ export const serverConfigSchema = v.object({
 });
 
 export type ServerConfig = v.InferOutput<typeof serverConfigSchema>;
-
-export interface McpGroupInfo {
-  /** Group name (key from mcpServers config) */
-  name: string;
-  /** Description of what this group provides */
-  description: string;
-}
-
-export interface ToolInfo {
-  name: string;
-  description?: string;
-  inputSchema: {
-    type: "object";
-    properties?: Record<string, unknown>;
-    required?: string[];
-    $schema?: string;
-  };
-}

@@ -1,8 +1,9 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import packageJson from "../package.json" with { type: "json" };
+import packageJson from "../../package.json" with { type: "json" };
+import type { McpServerConfig } from "../config/schema.js";
 import { getTransport } from "./transport.js";
-import type { McpGroupInfo, McpServerConfig, ToolInfo } from "./types.js";
+import type { McpGroupInfo, ToolInfo } from "./types.js";
 
 type GroupState =
   | {

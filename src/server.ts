@@ -5,9 +5,9 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import * as v from "valibot";
 import packageJson from "../package.json" with { type: "json" };
-import { ClientManager } from "./client-manager.js";
-import { logger } from "./logger.js";
-import type { ServerConfig } from "./types.js";
+import type { ServerConfig } from "./config/schema.js";
+import { ClientManager } from "./proxy/client-manager.js";
+import { logger } from "./utils/logger.js";
 
 const getToolsSchema = v.object({
   group: v.string(),

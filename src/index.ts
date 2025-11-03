@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { loadConfig } from "./config-loader.js";
+import { loadConfig } from "./config/loadConfig.js";
 import { createServer } from "./server.js";
 
 async function main() {

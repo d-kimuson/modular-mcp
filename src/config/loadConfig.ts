@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as v from "valibot";
-import { logger } from "./logger.js";
-import { type ServerConfig, serverConfigSchema } from "./types.js";
+import { logger } from "../utils/logger.js";
+import { type ServerConfig, serverConfigSchema } from "./schema.js";
 
 /**
  * Load and validate proxy configuration from a JSON file

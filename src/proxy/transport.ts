@@ -1,7 +1,7 @@
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import type { McpServerConfig } from "./types.js";
+import type { McpServerConfig } from "../config/schema.js";
 
 export const getTransport = (config: McpServerConfig) => {
   switch (config.type) {
