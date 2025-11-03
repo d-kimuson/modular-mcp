@@ -45,6 +45,25 @@ The `description` field is the only extension to the standard MCP configuration.
 
 **Note**: The `type` field defaults to `"stdio"` if not specified. For `stdio` type servers, you can omit the `type` field for cleaner configuration.
 
+### OAuth for Remote MCP Server
+
+Many remote MCP servers require OAuth-based authentication. Modular MCP does not currently provide an OAuth client. While Modular MCP supports both `sse` and `http` transports, when OAuth is required you should connect via `stdio` using `mcp-remote`.
+
+Example (connecting to Linear's remote MCP):
+
+```json
+{
+  "mcpServers": {
+    "linear-server": {
+      "description": "Use when you want to check Linear tickets, etc.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+    }
+  }
+}
+```
+
 ### 2. Register Modular MCP
 
 Register Modular MCP in your MCP client configuration (e.g., `.mcp.json` for Claude Code):
