@@ -1,0 +1,32 @@
+{
+  "name": "@org/serena-mcp",
+  "version": "0.1.0",
+  "description": "Serena MCP - Code operation tools for internal codebase",
+  "type": "module",
+  "bin": {
+    "serena-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "esbuild ./src/index.ts --format=esm --platform=node --bundle --outdir=dist",
+    "dev": "tsx ./src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "serena",
+    "code-tools"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^24.9.1",
+    "esbuild": "^0.25.11",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
