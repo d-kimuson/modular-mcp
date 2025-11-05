@@ -5,7 +5,7 @@ export const logger = {
   warn: (message: string) => {
     process.stderr.write(`[warn] ${message}\n`);
   },
-  error: (error: string | Error) => {
+  error: (error: unknown) => {
     if (error instanceof Error) {
       process.stderr.write(`[error] ${error.stack ?? error.message}\n`);
     } else {

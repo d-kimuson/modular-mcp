@@ -6,7 +6,7 @@ import {
 import * as v from "valibot";
 import packageJson from "../package.json" with { type: "json" };
 import type { ServerConfig } from "./config/schema.js";
-import { ClientManager } from "./proxy/client-manager.js";
+import { ModularMcpClient } from "./proxy/ModularMcpClient.js";
 import { logger } from "./utils/logger.js";
 
 const getToolsSchema = v.object({
@@ -20,37 +20,51 @@ const callToolSchema = v.object({
 });
 
 export const createServer = async (config: ServerConfig) => {
-  const manager = new ClientManager();
+  const mcpClient = new ModularMcpClient();
   const mcpGroups = Object.entries(config.mcpServers);
 
+  const stdioGroups = mcpGroups.filter(
+    ([_, config]) => config.type === "stdio",
+  );
+  const authRequiredGroups = mcpGroups.filter(
+    ([_, config]) => config.type !== "stdio",
+  );
+
   const cleanup = async () => {
-    await manager.disconnectAll();
+    await mcpClient.disconnectAll();
     process.exit(0);
   };
 
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  await Promise.allSettled(
-    mcpGroups.map(async ([name, config]) => {
-      try {
-        await manager.connect(name, config);
-      } catch (error) {
-        manager.recordFailedConnection(name, config, error);
-      }
+  await Promise.all(
+    stdioGroups.map(async ([name, config]) => {
+      await mcpClient.connect(name, config);
+      logger.info(`✅ successfully connected MCP Server: ${name}`);
     }),
   );
 
-  if (manager.listFailedGroups().length === 0) {
+  for (const [name, config] of authRequiredGroups) {
+    try {
+      await mcpClient.connect(name, config);
+      logger.info(`✅ successfully connected MCP Server: ${name}`);
+    } catch (error) {
+      logger.error(error);
+      mcpClient.recordFailedConnection(name, config, error);
+    }
+  }
+
+  if (mcpClient.listFailedGroups().length === 0) {
     logger.info(
-      `Successfully connected ${manager.listGroups().length} MCP groups. All groups are valid.`,
+      `Successfully connected ${mcpClient.listGroups().length} MCP groups. All groups are valid.`,
     );
   } else {
     logger.warn(
-      `Some MCP groups failed to connect. success_groups=[${manager
+      `Some MCP groups failed to connect. success_groups=[${mcpClient
         .listGroups()
         .map((g) => g.name)
-        .join(", ")}], failed_groups=[${manager
+        .join(", ")}], failed_groups=[${mcpClient
         .listFailedGroups()
         .map((g) => g.name)
         .join(", ")}]`,
@@ -68,13 +82,13 @@ export const createServer = async (config: ServerConfig) => {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const groups = manager.listGroups();
+    const groups = mcpClient.listGroups();
     const groupNames = groups.map((g) => g.name);
     const groupsDescription = groups
       .map((g) => `- ${g.name}: ${g.description}`)
       .join("\n");
 
-    const failedGroups = manager.listFailedGroups();
+    const failedGroups = mcpClient.listFailedGroups();
     const unavailableGroupsDescription =
       failedGroups.length > 0
         ? `\n\nUnavailable groups (connection failed):\n${failedGroups
@@ -149,7 +163,7 @@ export const createServer = async (config: ServerConfig) => {
           };
         }
 
-        const tools = await manager.listTools(parsedArgs.output.group);
+        const tools = await mcpClient.listTools(parsedArgs.output.group);
 
         return {
           content: [
@@ -188,7 +202,7 @@ export const createServer = async (config: ServerConfig) => {
         }
 
         try {
-          const result = await manager.callTool(
+          const result = await mcpClient.callTool(
             parsedArgs.output.group,
             parsedArgs.output.name,
             parsedArgs.output.args,

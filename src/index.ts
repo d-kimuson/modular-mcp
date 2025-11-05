@@ -3,6 +3,7 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadConfig } from "./config/loadConfig.js";
 import { createServer } from "./server.js";
+import { logger } from "./utils/logger.js";
 
 async function main() {
   const configPath = process.argv[2];
@@ -16,7 +17,8 @@ async function main() {
     const { server } = await createServer(config);
     const transport = new StdioServerTransport();
     await server.connect(transport);
-  } catch (_error) {
+  } catch (error) {
+    logger.error(error);
     process.exit(1);
   }
 }

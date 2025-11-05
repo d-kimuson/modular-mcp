@@ -2,7 +2,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import packageJson from "../../package.json" with { type: "json" };
 import type { McpServerConfig } from "../config/schema.js";
-import { getTransport } from "./transport.js";
+import { connectWithAuthentication } from "./connectWithAuthentication.js";
+import { getTransport } from "./getTransport.js";
 import type { McpGroupInfo, ToolInfo } from "./types.js";
 
 type GroupState =
@@ -21,7 +22,7 @@ type GroupState =
       error: Error;
     };
 
-export class ClientManager {
+export class ModularMcpClient {
   private groups = new Map<string, GroupState>();
 
   async connect(groupName: string, config: McpServerConfig): Promise<void> {
@@ -39,9 +40,9 @@ export class ClientManager {
       },
     );
 
-    const transport = getTransport(config);
+    await connectWithAuthentication(client, config);
 
-    await client.connect(transport);
+    const { transport } = await getTransport(config);
     const { tools } = await client.listTools();
 
     this.groups.set(groupName, {
