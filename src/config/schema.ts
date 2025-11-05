@@ -1,34 +1,34 @@
-import * as v from "valibot";
+import { z } from "zod";
 
-export const mcpServerConfigSchema = v.union([
-  v.object({
-    type: v.optional(v.literal("stdio"), "stdio"),
+export const mcpServerConfigSchema = z.union([
+  z.object({
+    type: z.literal("stdio").optional().default("stdio"),
     /** Description of what this MCP server group provides */
-    description: v.string(),
-    command: v.string(),
-    args: v.optional(v.array(v.string())),
-    env: v.optional(v.record(v.string(), v.string())),
+    description: z.string(),
+    command: z.string(),
+    args: z.array(z.string()).optional(),
+    env: z.record(z.string(), z.string()).optional(),
   }),
-  v.object({
-    type: v.literal("http"),
+  z.object({
+    type: z.literal("http"),
     /** Description of what this MCP server group provides */
-    description: v.string(),
-    url: v.string(),
-    headers: v.optional(v.record(v.string(), v.string())),
+    description: z.string(),
+    url: z.string(),
+    headers: z.record(z.string(), z.string()).optional(),
   }),
-  v.object({
-    type: v.literal("sse"),
+  z.object({
+    type: z.literal("sse"),
     /** Description of what this MCP server group provides */
-    description: v.string(),
-    url: v.string(),
-    headers: v.optional(v.record(v.string(), v.string())),
+    description: z.string(),
+    url: z.string(),
+    headers: z.record(z.string(), z.string()).optional(),
   }),
 ]);
 
-export type McpServerConfig = v.InferOutput<typeof mcpServerConfigSchema>;
+export type McpServerConfig = z.infer<typeof mcpServerConfigSchema>;
 
-export const serverConfigSchema = v.object({
-  mcpServers: v.record(v.string(), mcpServerConfigSchema),
+export const serverConfigSchema = z.object({
+  mcpServers: z.record(z.string(), mcpServerConfigSchema),
 });
 
-export type ServerConfig = v.InferOutput<typeof serverConfigSchema>;
+export type ServerConfig = z.infer<typeof serverConfigSchema>;

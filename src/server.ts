@@ -3,20 +3,20 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import * as v from "valibot";
+import { z } from "zod";
 import packageJson from "../package.json" with { type: "json" };
 import type { ServerConfig } from "./config/schema.js";
 import { ModularMcpClient } from "./proxy/ModularMcpClient.js";
 import { logger } from "./utils/logger.js";
 
-const getToolsSchema = v.object({
-  group: v.string(),
+const getToolsSchema = z.object({
+  group: z.string(),
 });
 
-const callToolSchema = v.object({
-  group: v.string(),
-  name: v.string(),
-  args: v.record(v.string(), v.any()),
+const callToolSchema = z.object({
+  group: z.string(),
+  name: z.string(),
+  args: z.record(z.string(), z.any()),
 });
 
 export const createServer = async (config: ServerConfig) => {
@@ -147,7 +147,7 @@ export const createServer = async (config: ServerConfig) => {
 
     switch (name) {
       case "get-modular-tools": {
-        const parsedArgs = v.safeParse(getToolsSchema, args);
+        const parsedArgs = getToolsSchema.safeParse(args);
         if (!parsedArgs.success) {
           return {
             content: [
@@ -155,7 +155,7 @@ export const createServer = async (config: ServerConfig) => {
                 type: "text",
                 text: JSON.stringify({
                   success: false,
-                  error: parsedArgs.issues,
+                  error: parsedArgs.error.issues,
                 }),
               },
             ],
@@ -163,7 +163,7 @@ export const createServer = async (config: ServerConfig) => {
           };
         }
 
-        const tools = await mcpClient.listTools(parsedArgs.output.group);
+        const tools = await mcpClient.listTools(parsedArgs.data.group);
 
         return {
           content: [
@@ -185,7 +185,7 @@ export const createServer = async (config: ServerConfig) => {
         };
       }
       case "call-modular-tool": {
-        const parsedArgs = v.safeParse(callToolSchema, args);
+        const parsedArgs = callToolSchema.safeParse(args);
         if (!parsedArgs.success) {
           return {
             content: [
@@ -193,7 +193,7 @@ export const createServer = async (config: ServerConfig) => {
                 type: "text",
                 text: JSON.stringify({
                   success: false,
-                  error: parsedArgs.issues,
+                  error: parsedArgs.error.issues,
                 }),
               },
             ],
@@ -203,9 +203,9 @@ export const createServer = async (config: ServerConfig) => {
 
         try {
           const result = await mcpClient.callTool(
-            parsedArgs.output.group,
-            parsedArgs.output.name,
-            parsedArgs.output.args,
+            parsedArgs.data.group,
+            parsedArgs.data.name,
+            parsedArgs.data.args,
           );
 
           return {

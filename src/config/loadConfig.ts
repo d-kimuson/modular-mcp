@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import * as v from "valibot";
+import { z } from "zod";
 import { logger } from "../utils/logger.js";
 import { type ServerConfig, serverConfigSchema } from "./schema.js";
 
@@ -38,18 +38,18 @@ export const loadConfig = async (configPath: string): Promise<ServerConfig> => {
     throw rawJson.error;
   }
 
-  const config = v.safeParse(serverConfigSchema, rawJson.data);
+  const config = serverConfigSchema.safeParse(rawJson.data);
 
   if (!config.success) {
     throw new Error(
       `Specified configuration file is not satisfies the schema: ${absolutePath}`,
       {
-        cause: v.flatten(config.issues).nested,
+        cause: z.treeifyError(config.error),
       },
     );
   }
 
   logger.info(`MCP server config loaded successfully.`);
 
-  return config.output;
+  return config.data;
 };
