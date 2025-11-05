@@ -4,8 +4,8 @@
     "serena": {
       "description": "社内コードベース操作に最適化された MCP。",
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@org/serena-mcp@latest"],
+      "command": "node",
+      "args": ["/Users/shin/Documents/programming/my-repogitory/serena-modular-mcp/packages/serena-mcp/dist/index.js"],
       "env": {}
     }
   },
