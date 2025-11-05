@@ -122,7 +122,8 @@
                     "description": {
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": []
                 }
               }
             },
