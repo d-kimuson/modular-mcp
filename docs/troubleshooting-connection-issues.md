@@ -1,33 +1,21 @@
 # serena-modular MCP接続問題のトラブルシューティング
 
-## 問題の概要
+## 現在の問題
 
-serena-modular MCPサーバーが実行できず、すべてのカテゴリ（fs、code、memory、session、meta）で「Connection closed」エラーが発生する問題が報告されています。
+serena-modular MCPサーバーを実行しても、すべてのカテゴリ（fs、code、memory、session、meta）で「Connection closed」エラーが発生します。
 
-## 調査結果
+**主な原因**: 上流MCPサーバー（`@org/serena-mcp`）が存在しないため、Modular MCPが接続できません。
 
-### 1. プロジェクトのビルドが必要
+## 前提条件（既に解決済み）
 
-**問題**: `dist/`ディレクトリが存在しない
+以下の準備が完了していることを前提とします：
 
-- `package.json`の`bin`フィールドは`./dist/index.js`を指定している
-- しかし、プロジェクトはビルドされていないため、このファイルが存在しない
-- TypeScriptソースコード（`src/`）は直接実行できない
+- ✅ **ビルド完了**: `pnpm install && pnpm build`を実行し、`dist/index.js`が生成されている
+- ✅ **設定ファイル**: `serena-config.example.json`などの設定ファイルを用意している
 
-**解決方法**:
-```bash
-# 依存関係のインストール
-pnpm install
+## 主要問題：上流MCPサーバーが存在しない
 
-# プロジェクトのビルド
-pnpm build
-```
-
-ビルド後、`dist/index.js`が作成されます。
-
-### 2. 上流MCPサーバーの問題
-
-**問題**: `@org/serena-mcp`パッケージが存在しない
+**問題の核心**: `@org/serena-mcp`パッケージが存在しない
 
 `serena-config.example.json`では、以下のように上流MCPサーバーとして`@org/serena-mcp`を指定しています：
 
@@ -51,25 +39,21 @@ $ npm view @org/serena-mcp
 npm error 404 Not Found - '@org/serena-mcp@*' is not in this registry.
 ```
 
-**原因分析**:
-- `@org/serena-mcp`は存在しないか、プライベートパッケージである可能性がある
-- Modular MCPは上流のMCPサーバーに接続できないため、カテゴリツールが利用できない
-- `src/client-manager.ts:58-60`で接続エラーが発生し、`recordFailedConnection`に記録される
+### なぜこれが問題なのか
 
-### 3. 設定ファイルのパス指定
+Modular MCPは**プロキシサーバー**です。つまり：
+- Modular MCP自体はツールを持っていません
+- 上流のMCPサーバー（この場合は`@org/serena-mcp`）に接続し、そのツールを中継します
+- 上流サーバーが存在しない、または接続できない場合、すべてのツールが使用不可になります
 
-**問題**: 設定ファイルのパスが必須
+### エラーの流れ
 
-`src/index.ts:8-12`の実装：
-```typescript
-const configPath = process.argv[2];
-
-if (!configPath) {
-  process.exit(1);
-}
-```
-
-設定ファイルのパスが提供されない場合、サーバーは即座に終了します。
+1. Modular MCPが起動
+2. `serena-config.example.json`を読み込み
+3. `npx -y @org/serena-mcp@latest`を実行しようとする
+4. ❌ パッケージが見つからず、接続失敗
+5. `src/client-manager.ts:58-60`で接続エラーが発生し、`recordFailedConnection`に記録される
+6. 結果：すべてのカテゴリツールが「Connection closed」エラーになる
 
 ## アーキテクチャの理解
 
@@ -89,47 +73,129 @@ Upstream MCP Server (@org/serena-mcp など)
 
 ## 解決策
 
-### オプション1: 既存の公開MCPサーバーを使用
+### 推奨：動作確認のため公開MCPサーバーでテスト
 
-`config.example.json`の例のように、公開されているMCPサーバーを使用：
+まず、Modular MCPが正しく動作するか確認するため、公開されているMCPサーバーでテストすることを推奨します。
+
+**テスト用設定ファイルを作成** (`test-config.json`):
 
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/d-kimuson/modular-mcp/refs/heads/main/config-schema.json",
   "mcpServers": {
-    "playwright": {
-      "description": "Use when you need to control or automate web browsers.",
+    "filesystem": {
+      "description": "File system operations",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
-    "context7": {
-      "description": "Use when you need to search library documentation.",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest", "/tmp"],
       "env": {}
     }
   }
 }
 ```
 
-### オプション2: @org/serena-mcpの実装
+**テスト実行**:
+```bash
+# ローカルでテスト
+node dist/index.js test-config.json
 
-`@org/serena-mcp`が実際に必要な場合は、このMCPサーバーを実装する必要があります。以下のツールを提供する必要があります：
+# または、Claude Desktopから接続してテスト
+```
 
-- **fs カテゴリ**: `read_file`, `create_text_file`, `list_dir`, `find_file`, `replace_regex`, `search_for_pattern`
-- **code カテゴリ**: `get_symbols_overview`, `find_symbol`, `find_referencing_symbols`, `replace_symbol_body`, など
-- **memory カテゴリ**: `write_memory`, `read_memory`, `list_memories`, `delete_memory`
-- **session カテゴリ**: `activate_project`, `switch_modes`, `get_current_config`, など
-- **meta カテゴリ**: `think_about_collected_information`, `initial_instructions`, など
+このテストが成功すれば、Modular MCP自体は正常に動作していることが確認できます。
 
-### オプション3: プライベートパッケージへのアクセス設定
+### 本題：@org/serena-mcpの対応
 
-`@org/serena-mcp`がプライベートnpmパッケージの場合：
+`@org/serena-mcp`を使用するには、以下のいずれかの対応が必要です：
 
-1. `.npmrc`に認証情報を設定
-2. 適切なnpm registryへのアクセス権を取得
-3. パッケージをインストール可能にする
+#### オプション1: @org/serena-mcpを実装する
+
+`serena-config.example.json`で指定されている以下のツールを提供するMCPサーバーを実装する必要があります：
+
+**必要なツール一覧**:
+- **fs カテゴリ** (6ツール):
+  - `mcp__serena__read_file`
+  - `mcp__serena__create_text_file`
+  - `mcp__serena__list_dir`
+  - `mcp__serena__find_file`
+  - `mcp__serena__replace_regex`
+  - `mcp__serena__search_for_pattern`
+
+- **code カテゴリ** (7ツール):
+  - `mcp__serena__get_symbols_overview`
+  - `mcp__serena__find_symbol`
+  - `mcp__serena__find_referencing_symbols`
+  - `mcp__serena__replace_symbol_body`
+  - `mcp__serena__insert_after_symbol`
+  - `mcp__serena__insert_before_symbol`
+  - `mcp__serena__rename_symbol`
+
+- **memory カテゴリ** (4ツール):
+  - `mcp__serena__write_memory`
+  - `mcp__serena__read_memory`
+  - `mcp__serena__list_memories`
+  - `mcp__serena__delete_memory`
+
+- **session カテゴリ** (6ツール):
+  - `mcp__serena__activate_project`
+  - `mcp__serena__switch_modes`
+  - `mcp__serena__get_current_config`
+  - `mcp__serena__onboarding`
+  - `mcp__serena__check_onboarding_performed`
+  - `mcp__serena__prepare_for_new_conversation`
+
+- **meta カテゴリ** (4ツール):
+  - `mcp__serena__think_about_collected_information`
+  - `mcp__serena__think_about_task_adherence`
+  - `mcp__serena__think_about_whether_you_are_done`
+  - `mcp__serena__initial_instructions`
+
+**合計**: 27個のツールの実装が必要
+
+#### オプション2: プライベートパッケージへのアクセス
+
+`@org/serena-mcp`が既にプライベートパッケージとして存在する場合：
+
+1. **認証情報の設定**:
+   ```bash
+   # .npmrcに認証トークンを追加
+   echo "//registry.npmjs.org/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+
+   # または、スコープ付きレジストリの場合
+   echo "@org:registry=https://your-registry.com/" >> ~/.npmrc
+   echo "//your-registry.com/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+   ```
+
+2. **アクセス権の確認**:
+   ```bash
+   npm view @org/serena-mcp
+   # パッケージ情報が表示されればOK
+   ```
+
+#### オプション3: 既存の公開MCPサーバーで代替
+
+`@org/serena-mcp`の機能が既存の公開MCPサーバーで代替可能な場合：
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "description": "File system operations",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest", "."],
+      "env": {}
+    }
+  },
+  "categories": {
+    "fs": {
+      "description": "ファイル/ディレクトリの読み書き",
+      "server": "filesystem",
+      "tools": {
+        "includeNames": ["read_file", "write_file", "list_directory"]
+      }
+    }
+  }
+}
+```
 
 ## Claude Desktopでの設定例
 
@@ -168,31 +234,67 @@ Upstream MCP Server (@org/serena-mcp など)
 }
 ```
 
-## 確認手順
+## 診断方法
 
-1. **ビルドの確認**:
+### 接続失敗を確認する方法
+
+1. **ローカルでテスト実行**:
    ```bash
-   ls -la dist/index.js
-   # ファイルが存在することを確認
+   node dist/index.js serena-config.example.json 2>&1
    ```
 
-2. **手動テスト**（オプション）:
-   ```bash
-   # config.example.jsonを使用してテスト
-   node dist/index.js config.example.json
-   # サーバーが起動し、stdioで入力を待機する
+   出力例（接続失敗の場合）:
+   ```
+   Some MCP groups failed to connect. success_groups=[], failed_groups=[serena]
    ```
 
-3. **ログの確認**:
-   - Claude Desktop: `View` → `Developer` → `Developer Tools` → `Console`タブ
-   - 接続エラーやサーバーログを確認
+2. **Claude Desktopのログを確認**:
+   - `View` → `Developer` → `Developer Tools` → `Console`タブ
+   - "Connection closed" や "failed to connect" などのエラーメッセージを探す
+
+3. **上流パッケージの存在確認**:
+   ```bash
+   npm view @org/serena-mcp
+   # 404エラーが返ってくる = パッケージが存在しない
+   ```
+
+### 正常に動作している場合の出力
+
+```
+Successfully connected 1 MCP groups. All groups are valid.
+```
+
+## 次のステップ
+
+### 短期的な対応（動作確認）
+
+1. **公開MCPサーバーでテスト**:
+   ```bash
+   # test-config.jsonを作成（上記の「推奨：動作確認のため公開MCPサーバーでテスト」を参照）
+   node dist/index.js test-config.json
+   ```
+
+2. **接続成功を確認**:
+   - "Successfully connected" メッセージが表示されることを確認
+
+### 長期的な対応（本番運用）
+
+以下のいずれかを実施：
+
+1. **@org/serena-mcpを実装** → 27個のツールを提供するMCPサーバーを開発
+2. **プライベートパッケージへのアクセス設定** → 既に存在する場合
+3. **既存MCPサーバーで代替** → 同等の機能を持つ公開サーバーを使用
 
 ## まとめ
 
-serena-modular MCPが動作しない主な原因：
+### 現在の状況
+- ✅ **ビルド完了** → `dist/index.js`が生成されている
+- ✅ **設定ファイル用意** → `serena-config.example.json`が存在
+- ❌ **上流MCPサーバーが存在しない** → これが現在の障害
 
-1. ✅ **ビルドされていない** → `pnpm build`で解決
-2. ❌ **上流MCPサーバー（@org/serena-mcp）が存在しない** → 別のMCPサーバーを使用するか、実装が必要
-3. ⚠️ **設定ファイルパスが必須** → Claude Desktop設定で正しいパスを指定
+### 根本原因
+`@org/serena-mcp`パッケージがnpm registryに存在しないため、Modular MCPが上流サーバーに接続できず、すべてのカテゴリツールが使用不可になっています。
 
-現在、最大の障害は`@org/serena-mcp`パッケージが存在しないことです。このパッケージを実装するか、既存の公開MCPサーバーを使用する必要があります。
+### 解決には
+- 上流MCPサーバー（`@org/serena-mcp`）を実装するか、既存の公開MCPサーバーを使用する必要があります
+- または、プライベートパッケージとして既に存在する場合は、アクセス権を取得してください
