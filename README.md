@@ -45,25 +45,6 @@ The `description` field is the only extension to the standard MCP configuration.
 
 **Note**: The `type` field defaults to `"stdio"` if not specified. For `stdio` type servers, you can omit the `type` field for cleaner configuration.
 
-### OAuth for Remote MCP Server
-
-Many remote MCP servers require OAuth-based authentication. Modular MCP does not currently provide an OAuth client. While Modular MCP supports both `sse` and `http` transports, when OAuth is required you should connect via `stdio` using `mcp-remote`.
-
-Example (connecting to Linear's remote MCP):
-
-```json
-{
-  "mcpServers": {
-    "linear-server": {
-      "description": "Use when you want to check Linear tickets, etc.",
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
-    }
-  }
-}
-```
-
 ### 2. Register Modular MCP
 
 Register Modular MCP in your MCP client configuration (e.g., `.mcp.json` for Claude Code):
@@ -127,3 +108,46 @@ This workflow keeps context usage minimal while providing access to all tools wh
 - **Scalable**: Can manage dozens of MCP servers without overwhelming context
 - **Flexible**: Easy to add/remove tool groups without affecting others
 - **Transparent**: Tools execute exactly as if called directly on upstream servers
+
+## OAuth Authentication for Remote MCP Servers
+
+Modular MCP supports OAuth-based authentication for remote MCP servers using both `sse` and `http` transports.
+
+### Using Built-in OAuth Support (Experimental)
+
+Modular MCP includes an experimental OAuth client that implements the [MCP Authorization specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization):
+
+```json
+{
+  "mcpServers": {
+    "linear-server": {
+      "description": "Use when you want to check Linear tickets, etc.",
+      "type": "sse",
+      "url": "https://mcp.linear.app/sse"
+    }
+  }
+}
+```
+
+On first connection, your browser will open for OAuth authentication. Tokens are stored locally in `~/.modular-mcp/oauth-servers/` and reused automatically.
+
+**Note:** This feature is experimental. If you encounter issues, use the fallback method below.
+
+### Fallback: Using mcp-remote via stdio
+
+For compatibility with all OAuth servers, you can use `mcp-remote` via `stdio` transport:
+
+```json
+{
+  "mcpServers": {
+    "linear-server": {
+      "description": "Use when you want to check Linear tickets, etc.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+    }
+  }
+}
+```
+
+This approach delegates OAuth handling to the `mcp-remote` client and is recommended if the experimental OAuth support doesn't work for your server.
