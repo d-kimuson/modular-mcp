@@ -39,7 +39,11 @@
                 }
               }
             },
-            "required": ["type", "description", "command"],
+            "required": [
+              "type",
+              "description",
+              "command"
+            ],
             "additionalProperties": false
           },
           {
@@ -65,7 +69,11 @@
                 }
               }
             },
-            "required": ["type", "description", "url"],
+            "required": [
+              "type",
+              "description",
+              "url"
+            ],
             "additionalProperties": false
           },
           {
@@ -91,13 +99,19 @@
                 }
               }
             },
-            "required": ["type", "description", "url"],
+            "required": [
+              "type",
+              "description",
+              "url"
+            ],
             "additionalProperties": false
           }
         ]
       }
     }
   },
-  "required": ["mcpServers"],
+  "required": [
+    "mcpServers"
+  ],
   "additionalProperties": false
 }

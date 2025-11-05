@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.4
+
+### &nbsp;&nbsp;&nbsp;Features
+
+- Implement OAuth authentication flow with modular MCP client &nbsp;-&nbsp; by **d-kimsuon** [<samp>(0c194)</samp>](https://github.com/d-kimuson/modular-mcp/commit/0c1949e)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.3...0.0.4)
+
 ## 0.0.3
 
 ### &nbsp;&nbsp;&nbsp;Features
