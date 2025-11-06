@@ -32,3 +32,30 @@ export const serverConfigSchema = z.object({
 });
 
 export type ServerConfig = z.infer<typeof serverConfigSchema>;
+
+// Standard MCP config schema (without description field)
+// Used for migrating from standard MCP configuration to Modular MCP format
+export const standardMcpServerConfigSchema = z.union([
+  z.object({
+    type: z.literal("stdio").optional().default("stdio"),
+    command: z.string(),
+    args: z.array(z.string()).optional(),
+    env: z.record(z.string(), z.string()).optional(),
+  }),
+  z.object({
+    type: z.literal("http"),
+    url: z.string(),
+    headers: z.record(z.string(), z.string()).optional(),
+  }),
+  z.object({
+    type: z.literal("sse"),
+    url: z.string(),
+    headers: z.record(z.string(), z.string()).optional(),
+  }),
+]);
+
+export const standardServerConfigSchema = z.object({
+  mcpServers: z.record(z.string(), standardMcpServerConfigSchema),
+});
+
+export type StandardServerConfig = z.infer<typeof standardServerConfigSchema>;

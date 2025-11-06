@@ -109,6 +109,28 @@ This workflow keeps context usage minimal while providing access to all tools wh
 - **Flexible**: Easy to add/remove tool groups without affecting others
 - **Transparent**: Tools execute exactly as if called directly on upstream servers
 
+## Migration from Standard MCP Configuration
+
+If you already have a standard MCP configuration file (e.g., `.mcp.json`), you can easily migrate it to Modular MCP format using the built-in migration command.
+
+### Using the Migration Command
+
+Run the migration command with your existing MCP configuration file:
+
+```bash
+npx -y @kimuson/modular-mcp migrate <mcp-config-file-path>
+```
+
+For example, if you have a `.mcp.json` file:
+
+```bash
+npx -y @kimuson/modular-mcp migrate .mcp.json
+```
+
+The migration command will:
+1. Generate a `modular-mcp.json` file with the migrated configuration (defaults to `modular-mcp.json` in the current directory, or use `-o` to specify a custom path)
+2. Replace the original file's contents with a Modular MCP server configuration that references the generated `modular-mcp.json` file
+
 ## OAuth Authentication for Remote MCP Servers
 
 Modular MCP supports OAuth-based authentication for remote MCP servers using both `sse` and `http` transports.

@@ -38,10 +38,27 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  await Promise.all(
+  const _stdioResults = await Promise.all(
     stdioGroups.map(async ([name, config]) => {
-      await mcpClient.connect(name, config);
-      logger.info(`✅ successfully connected MCP Server: ${name}`);
+      await mcpClient
+        .connect(name, config)
+        .then(() => {
+          logger.info(`✅ successfully connected MCP Server: ${name}`);
+          return {
+            name,
+            config,
+            success: true,
+          } as const;
+        })
+        .catch((error) => {
+          logger.error(error);
+          mcpClient.recordFailedConnection(name, config, error);
+          return {
+            name,
+            config,
+            success: false,
+          } as const;
+        });
     }),
   );
 

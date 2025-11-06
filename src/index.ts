@@ -1,26 +1,42 @@
 #!/usr/bin/env node
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { loadConfig } from "./config/loadConfig.js";
-import { createServer } from "./server.js";
+import { Command } from "commander";
+import { mcpAction } from "./cli/actions/mcp.js";
+import { migrateAction } from "./cli/actions/migrate.js";
 import { logger } from "./utils/logger.js";
 
-async function main() {
-  const configPath = process.argv[2];
+const program = new Command();
 
-  if (!configPath) {
-    process.exit(1);
-  }
+program
+  .argument("<config-file-path>", "config file to migrate")
+  .action(async (configFilePath: string) => {
+    await mcpAction(configFilePath);
+  });
 
-  try {
-    const config = await loadConfig(configPath);
-    const { server } = await createServer(config);
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-  } catch (error) {
-    logger.error(error);
-    process.exit(1);
-  }
-}
+program
+  .command("migrate")
+  .description("Migrate from general MCP configuration to Modular MCP")
+  .argument(
+    "<mcp-config-file-path>",
+    "MCP server configuration file to migrate",
+  )
+  .option(
+    "-o, --output-path <path>",
+    "Output file path. If not specified, defaults to 'modular-mcp.json' in the same directory as the input file",
+  )
+  .action(
+    async (mcpConfigFilePath: string, options: { outputPath?: string }) => {
+      await migrateAction(mcpConfigFilePath, {
+        outputPath: options.outputPath,
+      });
+    },
+  );
 
-await main();
+const main = async () => {
+  program.parse(process.argv);
+};
+
+main().catch((error) => {
+  logger.error(error);
+  process.exit(1);
+});

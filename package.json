@@ -44,15 +44,17 @@
     "fix:biome-lint": "biome check --write --unsafe .",
     "typecheck": "tsc --noEmit",
     "release": "release-it",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "./scripts/publish-check.sh"
   },
   "license": "MIT",
   "dependencies": {
     "@hono/node-server": "^1.19.6",
     "@hono/zod-validator": "^0.7.4",
     "@modelcontextprotocol/sdk": "^1.20.1",
+    "commander": "^14.0.2",
     "get-port": "^7.1.0",
     "hono": "^4.10.4",
+    "inquirer": "^12.10.0",
     "open": "^10.2.0",
     "strict-url-sanitise": "^0.0.1",
     "zod": "^4.1.12"
