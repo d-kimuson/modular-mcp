@@ -102,10 +102,17 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
   }
 
   async clientInformation(): Promise<OAuthClientInformationFull | undefined> {
-    return await this.authStore.getPersistenceFile(
+    const persistenceInfo = await this.authStore.getPersistenceFile(
       this.authServerConfig.host,
       "client",
     );
+
+    // check if the port has changed
+    if (persistenceInfo?.redirect_uris?.at(0) !== this.redirectUrl) {
+      return undefined;
+    }
+
+    return persistenceInfo;
   }
 
   async saveClientInformation(

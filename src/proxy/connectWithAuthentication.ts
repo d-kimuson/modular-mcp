@@ -1,19 +1,21 @@
 import type { Client } from "@modelcontextprotocol/sdk/client";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServerConfig } from "../config/schema.js";
-import { getTransport } from "./getTransport.js";
+import { createTransport } from "./createTransport.js";
 
 export const connectWithAuthentication = async (
   client: Client,
   config: McpServerConfig,
-) => {
-  const { transport } = await getTransport(config);
+): Promise<{ transport: Transport }> => {
+  const { transport } = await createTransport(config);
   if (config.type === "stdio") {
     await client.connect(transport);
-    return;
+    return { transport } as const;
   }
 
   try {
     await client.connect(transport);
+    return { transport } as const;
   } catch (error) {
     if (!(error instanceof Error)) {
       throw error;
@@ -34,6 +36,6 @@ export const connectWithAuthentication = async (
      * in redirectToAuthorization, we can successfully connect by recreating the transport
      * and calling client.connect again.
      */
-    await connectWithAuthentication(client, config);
+    return await connectWithAuthentication(client, config);
   }
 };

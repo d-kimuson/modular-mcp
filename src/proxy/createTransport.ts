@@ -1,13 +1,15 @@
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { AuthStore } from "../auth/AuthStore.js";
 import { ProxyOAuthClientProvider } from "../auth/ProxyOAuthClientProvider.js";
 import { setupCallbackServer } from "../auth/setupCallbackServer.js";
 import type { McpServerConfig } from "../config/schema.js";
 
+const authStore = new AuthStore();
 let server: Awaited<ReturnType<typeof setupCallbackServer>> | undefined;
 
-export const getTransport = async (config: McpServerConfig) => {
+export const createTransport = async (config: McpServerConfig) => {
   if (config.type === "stdio") {
     const transport = new StdioClientTransport({
       command: config.command,
@@ -18,8 +20,15 @@ export const getTransport = async (config: McpServerConfig) => {
     return { transport } as const;
   }
 
-  server ??= await setupCallbackServer();
+  const defaultPort = await authStore.getPreviousCallbackServerPort();
+  server ??= await setupCallbackServer({
+    defaultPort,
+  });
   const { awaitAuthorizationCode, callbackPort } = server;
+
+  if (defaultPort !== callbackPort) {
+    await authStore.saveCallbackServerPort(callbackPort);
+  }
 
   const { provider } = await ProxyOAuthClientProvider.create({
     remoteMcpServerUrl: config.url,

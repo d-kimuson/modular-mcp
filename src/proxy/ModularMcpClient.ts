@@ -3,7 +3,6 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import packageJson from "../../package.json" with { type: "json" };
 import type { McpServerConfig } from "../config/schema.js";
 import { connectWithAuthentication } from "./connectWithAuthentication.js";
-import { getTransport } from "./getTransport.js";
 import type { McpGroupInfo, ToolInfo } from "./types.js";
 
 type GroupState =
@@ -40,9 +39,7 @@ export class ModularMcpClient {
       },
     );
 
-    await connectWithAuthentication(client, config);
-
-    const { transport } = await getTransport(config);
+    const { transport } = await connectWithAuthentication(client, config);
     const { tools } = await client.listTools();
 
     this.groups.set(groupName, {

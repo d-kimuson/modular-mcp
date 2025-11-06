@@ -17,6 +17,30 @@ if (!existsSync(oauthServersDirectory)) {
 }
 
 export class AuthStore {
+  public async getPreviousCallbackServerPort() {
+    const path = resolve(moduleMcpDirectory, "callback-server-port.txt");
+    try {
+      return Number.parseInt(
+        await readFile(path, "utf-8").then((text) => text.trim()),
+        10,
+      );
+    } catch {
+      return undefined;
+    }
+  }
+
+  public async saveCallbackServerPort(port: number) {
+    try {
+      await writeFile(
+        resolve(moduleMcpDirectory, "callback-server-port.txt"),
+        port.toString(),
+        "utf-8",
+      );
+    } catch {
+      // do nothing
+    }
+  }
+
   public async getPersistenceFile<K extends PersistenceFileKind>(
     serverUrl: string,
     kind: K,
@@ -54,7 +78,7 @@ export class AuthStore {
 
       kind satisfies never;
       throw new Error(`Invalid kind: ${kind}`);
-    } catch (_error) {
+    } catch {
       return undefined;
     }
   }

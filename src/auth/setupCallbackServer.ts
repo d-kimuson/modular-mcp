@@ -6,8 +6,14 @@ import { z } from "zod";
 import { controllablePromise } from "../utils/controllablePromise.js";
 import { logger } from "../utils/logger.js";
 
-export const setupCallbackServer = async () => {
-  const port = await getPort();
+export const setupCallbackServer = async (options?: {
+  defaultPort?: number;
+}) => {
+  const { defaultPort } = options ?? {};
+
+  const port = await getPort({
+    port: defaultPort,
+  });
   let authorizationCodePromise = controllablePromise<string>();
 
   const app = new Hono();
