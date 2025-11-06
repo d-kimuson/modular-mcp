@@ -23,13 +23,6 @@ export const createServer = async (config: ServerConfig) => {
   const mcpClient = new ModularMcpClient();
   const mcpGroups = Object.entries(config.mcpServers);
 
-  const stdioGroups = mcpGroups.filter(
-    ([_, config]) => config.type === "stdio",
-  );
-  const authRequiredGroups = mcpGroups.filter(
-    ([_, config]) => config.type !== "stdio",
-  );
-
   const cleanup = async () => {
     await mcpClient.disconnectAll();
     process.exit(0);
@@ -38,8 +31,8 @@ export const createServer = async (config: ServerConfig) => {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  const _stdioResults = await Promise.all(
-    stdioGroups.map(async ([name, config]) => {
+  await Promise.all(
+    mcpGroups.map(async ([name, config]) => {
       await mcpClient
         .connect(name, config)
         .then(() => {
@@ -61,16 +54,6 @@ export const createServer = async (config: ServerConfig) => {
         });
     }),
   );
-
-  for (const [name, config] of authRequiredGroups) {
-    try {
-      await mcpClient.connect(name, config);
-      logger.info(`✅ successfully connected MCP Server: ${name}`);
-    } catch (error) {
-      logger.error(error);
-      mcpClient.recordFailedConnection(name, config, error);
-    }
-  }
 
   if (mcpClient.listFailedGroups().length === 0) {
     logger.info(

@@ -43,6 +43,8 @@
     "fix:biome-format": "biome format --write .",
     "fix:biome-lint": "biome check --write --unsafe .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "release-it",
     "prepublishOnly": "./scripts/publish-check.sh"
   },
@@ -64,11 +66,13 @@
     "@tsconfig/node22": "^22.0.2",
     "@tsconfig/strictest": "^2.0.6",
     "@types/node": "^24.9.1",
+    "@vitest/ui": "^1.6.1",
     "esbuild": "^0.25.11",
     "npm-run-all2": "^8.0.4",
     "release-it": "^19.0.5",
     "release-it-pnpm": "^4.6.6",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   }
 }

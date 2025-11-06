@@ -11,6 +11,7 @@ import { sanitizeUrl } from "strict-url-sanitise";
 import packageJson from "../../package.json" with { type: "json" };
 import { logger } from "../utils/logger.js";
 import { AuthStore } from "./AuthStore.js";
+import { lockAuthServer } from "./lockAuthServer.js";
 import type {
   AuthServerConfig,
   McpServerInfo,
@@ -142,6 +143,8 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
       );
     }
 
+    const { release } = await lockAuthServer();
+
     try {
       logger.info(
         "Open the authorization URL, and proceed with the authentication process.",
@@ -152,6 +155,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
       // do nothing
     } finally {
       await this.awaitAuthCompleted?.();
+      release();
     }
   }
 
