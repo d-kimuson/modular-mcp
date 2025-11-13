@@ -12,6 +12,37 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
+    },
+    "example-stdio-with-env-vars": {
+      "description": "Example showing environment variable interpolation in stdio servers. Supports both $VAR and ${VAR} syntax.",
+      "command": "node",
+      "args": [
+        "$HOME/.local/bin/my-script.js",
+        "--config=${XDG_CONFIG_HOME}/app/config.json",
+        "--log-level=$LOG_LEVEL"
+      ],
+      "env": {
+        "API_KEY": "$MY_API_KEY",
+        "LOG_DIR": "${HOME}/logs",
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    },
+    "example-http-with-env-vars": {
+      "type": "http",
+      "description": "Example showing environment variable interpolation in HTTP servers.",
+      "url": "$API_BASE_URL/mcp",
+      "headers": {
+        "Authorization": "Bearer $API_TOKEN",
+        "X-Custom-Header": "${CUSTOM_HEADER_VALUE}"
+      }
+    },
+    "example-sse-with-env-vars": {
+      "type": "sse",
+      "description": "Example showing environment variable interpolation in SSE servers.",
+      "url": "${SSE_ENDPOINT}/events",
+      "headers": {
+        "X-API-Key": "$SSE_API_KEY"
+      }
     }
   }
 }
