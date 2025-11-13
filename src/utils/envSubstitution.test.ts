@@ -99,7 +99,8 @@ describe("substituteEnvVars", () => {
     });
 
     it("should handle numbers in variable name", () => {
-      process.env.VAR123 = "numeric-var";
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+      process.env["VAR123"] = "numeric-var";
       const result = substituteEnvVars("$VAR123");
       expect(result).toBe("numeric-var");
     });
@@ -128,7 +129,8 @@ describe("substituteEnvVars", () => {
 
   describe("special characters and partial matches", () => {
     it("should not substitute partial matches", () => {
-      process.env.HOME_DIR = "/home/dir";
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+      process.env["HOME_DIR"] = "/home/dir";
       const result = substituteEnvVars("$HOME_DIR");
       expect(result).toBe("/home/dir");
       // HOME should not match HOME_DIR
@@ -189,8 +191,10 @@ describe("substituteInObject", () => {
     const input = { key: "$HOME" };
     const result = substituteInObject(input);
 
-    expect(input.key).toBe("$HOME");
-    expect(result.key).toBe("/home/user");
+    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+    expect(input["key"]).toBe("$HOME");
+    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+    expect(result["key"]).toBe("/home/user");
   });
 
   it("should throw error for missing variables in object values", () => {
