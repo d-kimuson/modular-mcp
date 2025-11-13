@@ -1,42 +1,25 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { z } from "zod";
-import {
-  substituteEnvVars,
-  substituteInArray,
-  substituteInObject,
-} from "../utils/envSubstitution.js";
+import { substituteInServerConfig } from "../utils/envSubstitution.js";
 import { logger } from "../utils/logger.js";
 import { type ServerConfig, serverConfigSchema } from "./schema.js";
 
 /**
- * Applies environment variable substitution to configuration data.
- * Substitutes variables in specific fields based on server type:
- * - stdio: args, env
- * - http/sse: url, headers
+ * Applies environment variable substitution to validated configuration data.
+ * This is called AFTER Zod parsing to work with typed data.
  *
- * @param data - Parsed JSON data (unvalidated)
- * @returns Data with environment variables substituted
+ * @param config - Validated ServerConfig from Zod
+ * @returns ServerConfig with environment variables substituted
  * @throws Error if substitution fails, with server name context
  */
-function applyEnvSubstitution(data: unknown): unknown {
-  // Type guard: ensure data has the expected structure
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    !("mcpServers" in data) ||
-    typeof data.mcpServers !== "object" ||
-    data.mcpServers === null
-  ) {
-    return data;
-  }
+function applyEnvSubstitution(config: ServerConfig): ServerConfig {
+  const substitutedServers: Record<string, ServerConfig["mcpServers"][string]> =
+    {};
 
-  const mcpServers = data.mcpServers as Record<string, unknown>;
-  const substituted: Record<string, unknown> = {};
-
-  for (const [serverName, serverConfig] of Object.entries(mcpServers)) {
+  for (const [serverName, serverConfig] of Object.entries(config.mcpServers)) {
     try {
-      substituted[serverName] = substituteServerConfig(serverConfig);
+      substitutedServers[serverName] = substituteInServerConfig(serverConfig);
     } catch (error) {
       // Add server name context to error message
       const message =
@@ -53,77 +36,8 @@ function applyEnvSubstitution(data: unknown): unknown {
   }
 
   return {
-    ...data,
-    mcpServers: substituted,
+    mcpServers: substitutedServers,
   };
-}
-
-/**
- * Substitutes environment variables in a single server configuration.
- *
- * @param serverConfig - Server configuration object
- * @returns Server configuration with substituted values
- */
-function substituteServerConfig(serverConfig: unknown): unknown {
-  if (typeof serverConfig !== "object" || serverConfig === null) {
-    return serverConfig;
-  }
-
-  const config = serverConfig as Record<string, unknown>;
-  const result = { ...config };
-
-  // Determine server type (default to stdio if not specified)
-  const serverType =
-    typeof config["type"] === "string" ? config["type"] : "stdio";
-
-  if (serverType === "stdio") {
-    // Substitute args array
-    if (Array.isArray(config["args"])) {
-      const allStrings = config["args"].every((arg) => typeof arg === "string");
-      if (allStrings) {
-        result["args"] = substituteInArray(config["args"] as string[]);
-      }
-    }
-
-    // Substitute env object values
-    if (
-      typeof config["env"] === "object" &&
-      config["env"] !== null &&
-      !Array.isArray(config["env"])
-    ) {
-      const envRecord = config["env"] as Record<string, unknown>;
-      const allStringValues = Object.values(envRecord).every(
-        (value) => typeof value === "string",
-      );
-      if (allStringValues) {
-        result["env"] = substituteInObject(envRecord as Record<string, string>);
-      }
-    }
-  } else if (serverType === "http" || serverType === "sse") {
-    // Substitute url string
-    if (typeof config["url"] === "string") {
-      result["url"] = substituteEnvVars(config["url"]);
-    }
-
-    // Substitute headers object values
-    if (
-      typeof config["headers"] === "object" &&
-      config["headers"] !== null &&
-      !Array.isArray(config["headers"])
-    ) {
-      const headersRecord = config["headers"] as Record<string, unknown>;
-      const allStringValues = Object.values(headersRecord).every(
-        (value) => typeof value === "string",
-      );
-      if (allStringValues) {
-        result["headers"] = substituteInObject(
-          headersRecord as Record<string, string>,
-        );
-      }
-    }
-  }
-
-  return result;
 }
 
 /**
@@ -160,10 +74,8 @@ export const loadConfig = async (configPath: string): Promise<ServerConfig> => {
     throw rawJson.error;
   }
 
-  // Apply environment variable substitution before validation
-  const dataWithSubstitution = applyEnvSubstitution(rawJson.data);
-
-  const config = serverConfigSchema.safeParse(dataWithSubstitution);
+  // First, validate with Zod to get typed data
+  const config = serverConfigSchema.safeParse(rawJson.data);
 
   if (!config.success) {
     throw new Error(
@@ -174,7 +86,10 @@ export const loadConfig = async (configPath: string): Promise<ServerConfig> => {
     );
   }
 
+  // Then, apply environment variable substitution to the typed data
+  const configWithSubstitution = applyEnvSubstitution(config.data);
+
   logger.info(`MCP server config loaded successfully.`);
 
-  return config.data;
+  return configWithSubstitution;
 };

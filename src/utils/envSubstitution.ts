@@ -1,3 +1,5 @@
+import type { McpServerConfig } from "../config/schema.js";
+
 /**
  * Environment variable substitution utility
  *
@@ -76,4 +78,65 @@ export function substituteInObject(
  */
 export function substituteInArray(arr: string[]): string[] {
   return arr.map((element) => substituteEnvVars(element));
+}
+
+/**
+ * Substitutes environment variables in a typed MCP server configuration.
+ * Uses discriminated union pattern matching to handle different server types.
+ *
+ * @param config - Validated MCP server configuration (from Zod)
+ * @returns New configuration with environment variables substituted
+ * @throws Error if any referenced environment variable is not defined
+ *
+ * @example
+ * // stdio server
+ * substituteInServerConfig({
+ *   type: "stdio",
+ *   description: "Example",
+ *   command: "node",
+ *   args: ["$HOME/script.js"],
+ *   env: { KEY: "$SECRET" }
+ * })
+ */
+export function substituteInServerConfig(
+  config: McpServerConfig,
+): McpServerConfig {
+  // Handle stdio type (default)
+  if (!("type" in config) || config.type === "stdio") {
+    return {
+      ...config,
+      args:
+        config.args !== undefined ? substituteInArray(config.args) : undefined,
+      env:
+        config.env !== undefined ? substituteInObject(config.env) : undefined,
+    };
+  }
+
+  // Handle http type
+  if (config.type === "http") {
+    return {
+      ...config,
+      url: substituteEnvVars(config.url),
+      headers:
+        config.headers !== undefined
+          ? substituteInObject(config.headers)
+          : undefined,
+    };
+  }
+
+  // Handle sse type
+  if (config.type === "sse") {
+    return {
+      ...config,
+      url: substituteEnvVars(config.url),
+      headers:
+        config.headers !== undefined
+          ? substituteInObject(config.headers)
+          : undefined,
+    };
+  }
+
+  // This should never be reached due to Zod validation, but TypeScript needs exhaustiveness check
+  const exhaustiveCheck: never = config;
+  return exhaustiveCheck;
 }
