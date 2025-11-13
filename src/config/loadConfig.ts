@@ -73,72 +73,49 @@ function substituteServerConfig(serverConfig: unknown): unknown {
   const result = { ...config };
 
   // Determine server type (default to stdio if not specified)
-  // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
   const serverType =
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
     typeof config["type"] === "string" ? config["type"] : "stdio";
 
   if (serverType === "stdio") {
     // Substitute args array
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
     if (Array.isArray(config["args"])) {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const allStrings = config["args"].every((arg) => typeof arg === "string");
       if (allStrings) {
-        // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-        result["args"] = substituteInArray(
-          // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-          config["args"] as string[],
-        );
+        result["args"] = substituteInArray(config["args"] as string[]);
       }
     }
 
     // Substitute env object values
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
     if (
       typeof config["env"] === "object" &&
       config["env"] !== null &&
       !Array.isArray(config["env"])
     ) {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const envRecord = config["env"] as Record<string, unknown>;
       const allStringValues = Object.values(envRecord).every(
         (value) => typeof value === "string",
       );
       if (allStringValues) {
-        // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
         result["env"] = substituteInObject(envRecord as Record<string, string>);
       }
     }
   } else if (serverType === "http" || serverType === "sse") {
     // Substitute url string
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
     if (typeof config["url"] === "string") {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-      result["url"] = substituteEnvVars(
-        // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-        config["url"],
-      );
+      result["url"] = substituteEnvVars(config["url"]);
     }
 
     // Substitute headers object values
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
     if (
       typeof config["headers"] === "object" &&
       config["headers"] !== null &&
       !Array.isArray(config["headers"])
     ) {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const headersRecord = config["headers"] as Record<string, unknown>;
       const allStringValues = Object.values(headersRecord).every(
         (value) => typeof value === "string",
       );
       if (allStringValues) {
-        // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
         result["headers"] = substituteInObject(
           headersRecord as Record<string, string>,
         );

@@ -45,6 +45,48 @@ The `description` field is the only extension to the standard MCP configuration.
 
 **Note**: The `type` field defaults to `"stdio"` if not specified. For `stdio` type servers, you can omit the `type` field for cleaner configuration.
 
+#### Environment Variable Interpolation
+
+Modular MCP supports environment variable interpolation in configuration files, allowing you to avoid committing sensitive information like API keys and tokens to version control.
+
+**Supported syntax**:
+- `$VAR` - Simple variable reference
+- `${VAR}` - Braced variable reference (useful when followed by other characters)
+
+**Where interpolation is supported**:
+- `stdio` servers: `args` array elements and `env` object values
+- `http`/`sse` servers: `url` string and `headers` object values
+
+**Example**:
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "description": "Example server with environment variables",
+      "command": "node",
+      "args": ["$HOME/.local/bin/server.js", "--config=${XDG_CONFIG_HOME}/app/config.json"],
+      "env": {
+        "API_KEY": "$MY_API_KEY",
+        "LOG_DIR": "${HOME}/logs"
+      }
+    },
+    "api-server": {
+      "description": "HTTP server with authentication",
+      "type": "http",
+      "url": "https://api.example.com",
+      "headers": {
+        "Authorization": "Bearer $API_TOKEN"
+      }
+    }
+  }
+}
+```
+
+**Important notes**:
+- Environment variables must be set before starting Modular MCP
+- Missing environment variables will cause an error with a clear message
+- Variables are substituted at load time, so the config file remains safe to commit
+
 ### 2. Register Modular MCP
 
 Register Modular MCP in your MCP client configuration (e.g., `.mcp.json` for Claude Code):
