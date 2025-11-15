@@ -100,7 +100,7 @@ export const createServer = async (config: ServerConfig) => {
       tools: [
         {
           name: "get-modular-tools",
-          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}\n\nExample usage:\n  get-modular-tools(group="playwright")\n  → Returns all tool schemas from the playwright group`,
+          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}`,
           inputSchema: {
             type: "object",
             properties: {
