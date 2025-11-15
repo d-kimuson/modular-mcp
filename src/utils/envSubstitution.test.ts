@@ -31,6 +31,7 @@ describe("substituteEnvVars", () => {
       expect(result).toBe("test-value");
     });
 
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
     it("should substitute a single ${VAR} syntax", () => {
       // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
       const result = substituteEnvVars("${TEST_VAR}");
@@ -42,6 +43,7 @@ describe("substituteEnvVars", () => {
       expect(result).toBe("prefix-test-value-suffix");
     });
 
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
     it("should substitute ${VAR} in the middle of a string", () => {
       // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
       const result = substituteEnvVars("prefix-${TEST_VAR}-suffix");
@@ -113,6 +115,7 @@ describe("substituteEnvVars", () => {
       );
     });
 
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
     it("should throw error for missing ${VAR}", () => {
       // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal string substitution
       expect(() => substituteEnvVars("${MISSING_VAR}")).toThrow(
