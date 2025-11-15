@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.0.6
+
+### &nbsp;&nbsp;&nbsp;Features
+
+- Add environment variable substitution utility &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(72bf1)</samp>](https://github.com/d-kimuson/modular-mcp/commit/72bf154)
+- Integrate environment variable substitution into config loader &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(73ba7)</samp>](https://github.com/d-kimuson/modular-mcp/commit/73ba73e)
+- Add usage examples to Agent Tools descriptions &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(1e934)</samp>](https://github.com/d-kimuson/modular-mcp/commit/1e934b7)
+
+### &nbsp;&nbsp;&nbsp;Bug Fixes
+
+- Clean up biome-ignore comments and add env var documentation &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(40955)</samp>](https://github.com/d-kimuson/modular-mcp/commit/409555a)
+- Remove usage example from get-modular-tools description &nbsp;-&nbsp; by **d-kimsuon** [<samp>(dc946)</samp>](https://github.com/d-kimuson/modular-mcp/commit/dc94663)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.5...0.0.6)
+
 ## 0.0.5
 
 ### &nbsp;&nbsp;&nbsp;Features
