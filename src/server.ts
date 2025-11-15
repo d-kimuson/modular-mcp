@@ -116,7 +116,7 @@ export const createServer = async (config: ServerConfig) => {
         {
           name: "call-modular-tool",
           description:
-            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use get-modular-tools first to discover available tools and their input schemas in the specified group, then use this tool to execute them. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.",
+            'Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use get-modular-tools first to discover available tools and their input schemas in the specified group, then use this tool to execute them. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.\n\nExample usage:\n  call-modular-tool(group="playwright", name="browser_navigate", args={"url": "https://example.com"})\n  → Executes the browser_navigate tool from the playwright group with the specified arguments',
           inputSchema: {
             type: "object",
             properties: {
