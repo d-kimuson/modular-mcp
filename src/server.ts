@@ -100,7 +100,7 @@ export const createServer = async (config: ServerConfig) => {
       tools: [
         {
           name: "get-modular-tools",
-          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}`,
+          description: `modular-mcp manages multiple MCP servers as organized groups, providing only the necessary group's tool descriptions to the LLM on demand instead of overwhelming it with all tool descriptions at once.\n\nUse this tool to retrieve available tools in a specific group, then use call-modular-tool to execute them.\n\nAvailable groups:\n${groupsDescription}${unavailableGroupsDescription}\n\nExample usage:\n  get-modular-tools(group="playwright")\n  → Returns all tool schemas from the playwright group`,
           inputSchema: {
             type: "object",
             properties: {
@@ -116,7 +116,7 @@ export const createServer = async (config: ServerConfig) => {
         {
           name: "call-modular-tool",
           description:
-            "Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use get-modular-tools first to discover available tools and their input schemas in the specified group, then use this tool to execute them. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.",
+            'Execute a tool from a specific MCP group. Proxies the call to the appropriate upstream MCP server. Use get-modular-tools first to discover available tools and their input schemas in the specified group, then use this tool to execute them. This maintains a clean separation between discovery (context-efficient) and execution phases, enabling effective management of large tool collections across multiple MCP servers.\n\nExample usage:\n  call-modular-tool(group="playwright", name="browser_navigate", args={"url": "https://example.com"})\n  → Executes the browser_navigate tool from the playwright group with the specified arguments',
           inputSchema: {
             type: "object",
             properties: {
