@@ -2,17 +2,13 @@
 
 set -ueo pipefail
 
+temp_dir="e2e-check-temp"
+temp_cache_dir="npm-cache" # 空のキャッシュディレクトリを使うことでクリーンインストール時の動作を再現
+
 pnpm build
-output_file=$(pnpm pack --json | jq -r '.filename')
+output_file=$(pnpm pack --pack-destination ./$temp_dir --json | jq -r '.filename')
 
-mkdir temp-pkg
-cd temp-pkg && npm init -y
-npm install ../$output_file
+npx --yes --cache "./$temp_dir/$temp_cache_dir" --package "$output_file" modular-mcp --version
+npx --yes --cache "./$temp_dir/$temp_cache_dir" --package "$output_file" modular-mcp --help
 
-rm -rf ../node_modules
-
-npx modular-mcp --version
-npx modular-mcp --help
-cd ..
-
-rm -rf temp-pkg
+rm -rf $temp_dir
