@@ -29,3 +29,9 @@ jobs:
 
       - name: Run type checking
         run: pnpm typecheck
+
+      - name: Run type checking
+        run: pnpm test
+
+      - name: Run e2e checks
+        run: ./scripts/e2e-check.sh

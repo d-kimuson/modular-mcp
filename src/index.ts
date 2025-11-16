@@ -4,10 +4,13 @@ import { Command } from "commander";
 import { mcpAction } from "./cli/actions/mcp.js";
 import { migrateAction } from "./cli/actions/migrate.js";
 import { logger } from "./utils/logger.js";
+import packageJson from "../package.json" with { type: "json" };
 
 const program = new Command();
 
 program
+  .version(packageJson.version)
+  .description(packageJson.description)
   .argument("<config-file-path>", "config file to migrate")
   .action(async (configFilePath: string) => {
     await mcpAction(configFilePath);
