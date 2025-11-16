@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import packageJson from "../package.json" with { type: "json" };
 import { mcpAction } from "./cli/actions/mcp.js";
 import { migrateAction } from "./cli/actions/migrate.js";
 import { logger } from "./utils/logger.js";
-import packageJson from "../package.json" with { type: "json" };
 
 const program = new Command();
 
