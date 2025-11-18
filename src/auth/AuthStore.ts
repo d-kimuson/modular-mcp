@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import {
@@ -154,5 +154,33 @@ export class AuthStore {
 
     kind satisfies never;
     throw new Error(`Invalid kind: ${kind}`);
+  }
+
+  public async getPersistenceFileModificationTime<
+    K extends PersistenceFileKind,
+  >(serverUrl: string, kind: K): Promise<Date | undefined> {
+    try {
+      const basePath = resolve(
+        oauthServersDirectory,
+        createHash("md5").update(serverUrl).digest("hex"),
+      );
+
+      let filePath: string;
+      if (kind === "tokens") {
+        filePath = resolve(basePath, "tokens.json");
+      } else if (kind === "client") {
+        filePath = resolve(basePath, "client.json");
+      } else if (kind === "verifier") {
+        filePath = resolve(basePath, "verifier.txt");
+      } else {
+        kind satisfies never;
+        throw new Error(`Invalid kind: ${kind}`);
+      }
+
+      const stats = await stat(filePath);
+      return stats.mtime;
+    } catch {
+      return undefined;
+    }
   }
 }
