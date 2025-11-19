@@ -9,6 +9,8 @@ import { logger } from "./utils/logger.js";
 const program = new Command();
 
 program
+  .name(`npx -y ${packageJson.name}@latest`)
+  .usage("<config-file-path> [options]")
   .version(packageJson.version)
   .description(packageJson.description)
   .argument("<config-file-path>", "config file to migrate")
