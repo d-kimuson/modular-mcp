@@ -3,11 +3,18 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServerConfig } from "../config/schema.js";
 import { createTransport } from "./createTransport.js";
 
+type ConnectOptions = {
+  oauthTimeoutMs?: number;
+};
+
 export const connectWithAuthentication = async (
   client: Client,
   config: McpServerConfig,
+  options?: ConnectOptions,
 ): Promise<{ transport: Transport }> => {
-  const { transport } = await createTransport(config);
+  const { transport } = await createTransport(config, {
+    oauthTimeoutMs: options?.oauthTimeoutMs,
+  });
   if (config.type === "stdio") {
     await client.connect(transport);
     return { transport } as const;
@@ -36,6 +43,6 @@ export const connectWithAuthentication = async (
      * in redirectToAuthorization, we can successfully connect by recreating the transport
      * and calling client.connect again.
      */
-    return await connectWithAuthentication(client, config);
+    return await connectWithAuthentication(client, config, options);
   }
 };

@@ -21,8 +21,14 @@ type GroupState =
       error: Error;
     };
 
+type ModularMcpClientOptions = {
+  oauthTimeoutMs?: number;
+};
+
 export class ModularMcpClient {
-  private groups = new Map<string, GroupState>();
+  private readonly groups = new Map<string, GroupState>();
+
+  constructor(private readonly options: ModularMcpClientOptions = {}) {}
 
   async connect(groupName: string, config: McpServerConfig): Promise<void> {
     if (this.groups.has(groupName)) {
@@ -39,7 +45,9 @@ export class ModularMcpClient {
       },
     );
 
-    const { transport } = await connectWithAuthentication(client, config);
+    const { transport } = await connectWithAuthentication(client, config, {
+      oauthTimeoutMs: this.options.oauthTimeoutMs,
+    });
     const { tools } = await client.listTools();
 
     this.groups.set(groupName, {

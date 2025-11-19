@@ -201,6 +201,8 @@ Modular MCP includes an experimental OAuth client that implements the [MCP Autho
 
 On first connection, your browser will open for OAuth authentication. Tokens are stored locally in `~/.modular-mcp/oauth-servers/` and reused automatically.
 
+The CLI waits up to 5 minutes for the OAuth callback before aborting and shutting down the local server. You can change this with the `--oauth-timeout <seconds>` flag when launching `modular-mcp`, for example `npx -y @kimuson/modular-mcp modular-mcp.json --oauth-timeout 120` to use a 2-minute limit.
+
 **Note:** This feature is experimental. If you encounter issues, use the fallback method below.
 
 ### Fallback: Using mcp-remote via stdio

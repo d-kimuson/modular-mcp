@@ -9,6 +9,10 @@ import type { ServerConfig } from "./config/schema.js";
 import { ModularMcpClient } from "./proxy/ModularMcpClient.js";
 import { logger } from "./utils/logger.js";
 
+type ServerOptions = {
+  oauthTimeoutMs?: number;
+};
+
 const getToolsSchema = z.object({
   group: z.string(),
 });
@@ -19,8 +23,13 @@ const callToolSchema = z.object({
   args: z.record(z.string(), z.any()),
 });
 
-export const createServer = async (config: ServerConfig) => {
-  const mcpClient = new ModularMcpClient();
+export const createServer = async (
+  config: ServerConfig,
+  options?: ServerOptions,
+) => {
+  const mcpClient = new ModularMcpClient({
+    oauthTimeoutMs: options?.oauthTimeoutMs,
+  });
   const mcpGroups = Object.entries(config.mcpServers);
 
   const cleanup = async () => {
