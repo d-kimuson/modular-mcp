@@ -1,6 +1,6 @@
 {
   "name": "@kimuson/modular-mcp",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Modular MCP - Modular tool access for reducing context overhead",
   "type": "module",
   "bin": {

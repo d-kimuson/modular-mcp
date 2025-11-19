@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.7
+
+### &nbsp;&nbsp;&nbsp;Bug Fixes
+
+- Fix OAuth timeout issue &nbsp;-&nbsp; by **d-kimsuon** [<samp>(xxxxx)</samp>](https://github.com/d-kimuson/modular-mcp/commit/xxxxxxx)
+- Fix authentication state reset when connecting to multiple OAuth servers &nbsp;-&nbsp; by **d-kimsuon** [<samp>(xxxxx)</samp>](https://github.com/d-kimuson/modular-mcp/commit/xxxxxxx)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.6...0.0.7)
+
 ## 0.0.6
 
 ### &nbsp;&nbsp;&nbsp;Features
