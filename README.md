@@ -56,8 +56,9 @@ The `description` field is the only extension to the standard MCP configuration.
 Modular MCP supports environment variable interpolation in configuration files, allowing you to avoid committing sensitive information like API keys and tokens to version control.
 
 **Supported syntax**:
-- `$VAR` - Simple variable reference
-- `${VAR}` - Braced variable reference (useful when followed by other characters)
+- `${VAR}` - Braced variable reference
+
+**Note**: Only the `${VAR}` syntax is supported. The `$VAR` syntax (without braces) is intentionally not supported to avoid conflicts with values that legitimately contain dollar signs (e.g., tokens like `token$abc123`).
 
 **Where interpolation is supported**:
 - `stdio` servers: `args` array elements and `env` object values
@@ -70,9 +71,9 @@ Modular MCP supports environment variable interpolation in configuration files, 
     "my-server": {
       "description": "Example server with environment variables",
       "command": "node",
-      "args": ["$HOME/.local/bin/server.js", "--config=${XDG_CONFIG_HOME}/app/config.json"],
+      "args": ["${HOME}/.local/bin/server.js", "--config=${XDG_CONFIG_HOME}/app/config.json"],
       "env": {
-        "API_KEY": "$MY_API_KEY",
+        "API_KEY": "${MY_API_KEY}",
         "LOG_DIR": "${HOME}/logs"
       }
     },
@@ -81,7 +82,7 @@ Modular MCP supports environment variable interpolation in configuration files, 
       "type": "http",
       "url": "https://api.example.com",
       "headers": {
-        "Authorization": "Bearer $API_TOKEN"
+        "Authorization": "Bearer ${API_TOKEN}"
       }
     }
   }
@@ -90,7 +91,7 @@ Modular MCP supports environment variable interpolation in configuration files, 
 
 **Important notes**:
 - Environment variables must be set before starting Modular MCP
-- Missing environment variables will cause an error with a clear message
+- If a referenced environment variable is not defined, a warning will be logged and the original placeholder (e.g., `${UNDEFINED_VAR}`) will be preserved
 - Variables are substituted at load time, so the config file remains safe to commit
 
 ### 2. Register Modular MCP
