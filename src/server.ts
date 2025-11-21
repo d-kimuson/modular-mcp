@@ -5,9 +5,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import packageJson from "../package.json" with { type: "json" };
-import type { ServerConfig } from "./config/schema.js";
+import type { McpServerConfig, ServerConfig } from "./config/schema.js";
 import { ModularMcpClient } from "./proxy/ModularMcpClient.js";
 import { logger } from "./utils/logger.js";
+import { execSync } from "node:child_process";
 
 const getToolsSchema = z.object({
   group: z.string(),
@@ -20,8 +21,42 @@ const callToolSchema = z.object({
 });
 
 export const createServer = async (config: ServerConfig) => {
+  let npxPath: string | undefined = undefined;
   const mcpClient = new ModularMcpClient();
-  const mcpGroups = Object.entries(config.mcpServers);
+  const mcpGroups = Object.entries(config.mcpServers).map(([name, config]) => {
+    if (config.type !== "stdio") {
+      if (npxPath === undefined) {
+        try {
+          npxPath = execSync("which npx", { encoding: "utf-8" }).trim();
+        } catch {
+          npxPath = "npx";
+        }
+      }
+
+      // 組み込みの OAuth 実装が同時実行制御に重大な問題があるため
+      // mcp-remote を利用する形にする
+      const headerArgs = Object.entries(config.headers ?? {}).flatMap(
+        ([key, value]) => [`--header`, `${key}: ${value}`] as const,
+      );
+
+      const fallbackConfig: McpServerConfig = {
+        type: "stdio",
+        description: config.description,
+        command: npxPath,
+        args: [
+          "-y",
+          "mcp-remote",
+          config.url,
+          ...headerArgs,
+          `--transport`,
+          config.type === "sse" ? "sse-only" : "http-only",
+        ],
+      };
+
+      return [name, fallbackConfig] as const;
+    }
+    return [name, config] as const;
+  });
 
   const cleanup = async () => {
     await mcpClient.disconnectAll();
