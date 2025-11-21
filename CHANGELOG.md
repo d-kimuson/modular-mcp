@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.8
+
+### &nbsp;&nbsp;&nbsp;Bug Fixes
+
+- Oauth multiserver bug fixed by using mcp-remote &nbsp;-&nbsp; by **d-kimsuon** [<samp>(98a38)</samp>](https://github.com/d-kimuson/modular-mcp/commit/98a380f)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.7...0.0.8)
+
 ## 0.0.7
 
 ### &nbsp;&nbsp;&nbsp;Bug Fixes
