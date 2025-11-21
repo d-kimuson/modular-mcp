@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { Server } from "@modelcontextprotocol/sdk/server";
 import {
   CallToolRequestSchema,
@@ -8,7 +9,6 @@ import packageJson from "../package.json" with { type: "json" };
 import type { McpServerConfig, ServerConfig } from "./config/schema.js";
 import { ModularMcpClient } from "./proxy/ModularMcpClient.js";
 import { logger } from "./utils/logger.js";
-import { execSync } from "node:child_process";
 
 const getToolsSchema = z.object({
   group: z.string(),
@@ -21,7 +21,7 @@ const callToolSchema = z.object({
 });
 
 export const createServer = async (config: ServerConfig) => {
-  let npxPath: string | undefined = undefined;
+  let npxPath: string | undefined;
   const mcpClient = new ModularMcpClient();
   const mcpGroups = Object.entries(config.mcpServers).map(([name, config]) => {
     if (config.type !== "stdio") {
