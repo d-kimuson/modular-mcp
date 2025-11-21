@@ -21,15 +21,10 @@ export type McpServerInfo = {
   authorizeResource: string | undefined;
 };
 
-export type PersistenceFileKind =
-  | "client"
-  | "tokens"
-  | "verifier"
-  | "callback-port";
+export type PersistenceFileKind = "client" | "tokens" | "verifier";
 
 export type PersistenceFileContent = {
   client: OAuthClientInformationFull;
   tokens: OAuthTokens;
   verifier: string;
-  "callback-port": number;
 };

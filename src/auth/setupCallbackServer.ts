@@ -6,20 +6,15 @@ import { z } from "zod";
 import { controllablePromise } from "../utils/controllablePromise.js";
 import { logger } from "../utils/logger.js";
 
-const DEFAULT_CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
-
 export const setupCallbackServer = async (options?: {
   defaultPort?: number;
-  timeoutMs?: number;
 }) => {
-  const { defaultPort, timeoutMs = DEFAULT_CALLBACK_TIMEOUT_MS } =
-    options ?? {};
+  const { defaultPort } = options ?? {};
 
   const port = await getPort({
     port: defaultPort,
   });
   let authorizationCodePromise = controllablePromise<string>();
-  let timeoutHandle: NodeJS.Timeout | undefined;
 
   const app = new Hono();
 
@@ -48,73 +43,23 @@ You can now access resources through the MCP Server.`.trim(),
   });
   logger.info(`Callback server is running on port ${port}`);
 
-  let cleanedUp = false;
-  const clearTimeoutHandle = () => {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-      timeoutHandle = undefined;
-    }
-  };
-
   const cleanUp = () => {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-    clearTimeoutHandle();
     temporaryServer.close();
-    authorizationCodePromise = controllablePromise<string>();
   };
 
-  const onTimeout = () => {
-    if (authorizationCodePromise.status !== "pending") {
-      return;
-    }
-    logger.warn(
-      `OAuth authorization timed out after ${(timeoutMs / 1000).toFixed(0)} seconds. Closing callback server (port ${port}).`,
-    );
-    authorizationCodePromise.reject(
-      new Error(
-        "OAuth authorization timed out before the callback was received.",
-      ),
-    );
+  process.on("SIGINT", () => {
     cleanUp();
-  };
+  });
 
-  const startTimeout = () => {
-    if (timeoutMs === undefined) {
-      return;
-    }
-    timeoutHandle = setTimeout(onTimeout, timeoutMs);
-    timeoutHandle.unref?.();
-  };
-
-  const resetTimeout = () => {
-    clearTimeoutHandle();
-  };
-
-  const sigintHandler = () => {
+  process.on("SIGTERM", () => {
     cleanUp();
-  };
-  const sigtermHandler = () => {
-    cleanUp();
-  };
-
-  process.on("SIGINT", sigintHandler);
-  process.on("SIGTERM", sigtermHandler);
+  });
 
   const awaitAuthorizationCode = async () => {
-    startTimeout();
-    try {
-      const code = await authorizationCodePromise.promise;
-      cleanUp();
-      return code;
-    } finally {
-      resetTimeout();
-      process.off("SIGINT", sigintHandler);
-      process.off("SIGTERM", sigtermHandler);
-      cleanedUp = true;
-    }
+    const code = await authorizationCodePromise.promise;
+    temporaryServer.close();
+    authorizationCodePromise = controllablePromise<string>();
+    return code;
   };
 
   return {

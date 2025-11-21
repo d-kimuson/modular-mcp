@@ -103,7 +103,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
 
   async clientInformation(): Promise<OAuthClientInformationFull | undefined> {
     const persistenceInfo = await this.authStore.getPersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "client",
     );
 
@@ -119,7 +119,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
     clientInformation: OAuthClientInformationFull,
   ): Promise<void> {
     await this.authStore.savePersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "client",
       clientInformation,
     );
@@ -127,7 +127,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
 
   async tokens(): Promise<OAuthTokens | undefined> {
     const tokens = await this.authStore.getPersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "tokens",
     );
 
@@ -136,7 +136,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
 
   async saveTokens(tokens: OAuthTokens): Promise<void> {
     await this.authStore.savePersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "tokens",
       tokens,
     );
@@ -168,7 +168,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
 
   async saveCodeVerifier(codeVerifier: string): Promise<void> {
     await this.authStore.savePersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "verifier",
       codeVerifier,
     );
@@ -176,7 +176,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
 
   async codeVerifier(): Promise<string> {
     const codeVerifier = await this.authStore.getPersistenceFile(
-      this.mcpServerInfo.remoteMcpServerUrl,
+      this.authServerConfig.host,
       "verifier",
     );
     if (codeVerifier === undefined) {
@@ -230,7 +230,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
       (async () => {
         if (scope === "all" || scope === "client") {
           await this.authStore.deletePersistenceFile(
-            this.mcpServerInfo.remoteMcpServerUrl,
+            this.authServerConfig.host,
             "client",
           );
         }
@@ -238,7 +238,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
       (async () => {
         if (scope === "all" || scope === "tokens") {
           await this.authStore.deletePersistenceFile(
-            this.mcpServerInfo.remoteMcpServerUrl,
+            this.authServerConfig.host,
             "tokens",
           );
         }
@@ -246,7 +246,7 @@ export class ProxyOAuthClientProvider implements OAuthClientProvider {
       (async () => {
         if (scope === "all" || scope === "verifier") {
           await this.authStore.deletePersistenceFile(
-            this.mcpServerInfo.remoteMcpServerUrl,
+            this.authServerConfig.host,
             "verifier",
           );
         }

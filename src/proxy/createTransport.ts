@@ -7,15 +7,9 @@ import { setupCallbackServer } from "../auth/setupCallbackServer.js";
 import type { McpServerConfig } from "../config/schema.js";
 
 const authStore = new AuthStore();
+let server: Awaited<ReturnType<typeof setupCallbackServer>> | undefined;
 
-type CreateTransportOptions = {
-  oauthTimeoutMs?: number;
-};
-
-export const createTransport = async (
-  config: McpServerConfig,
-  options?: CreateTransportOptions,
-) => {
+export const createTransport = async (config: McpServerConfig) => {
   if (config.type === "stdio") {
     const transport = new StdioClientTransport({
       command: config.command,
@@ -26,61 +20,20 @@ export const createTransport = async (
     return { transport } as const;
   }
 
-  const persistedPort = await authStore.getPersistenceFile(
-    config.url,
-    "callback-port",
-  );
+  const defaultPort = await authStore.getPreviousCallbackServerPort();
+  server ??= await setupCallbackServer({
+    defaultPort,
+  });
+  const { awaitAuthorizationCode, callbackPort } = server;
 
-  let callbackPort = persistedPort;
-  let callbackServer:
-    | Awaited<ReturnType<typeof setupCallbackServer>>
-    | undefined;
-
-  const ensureCallbackServer = async () => {
-    if (callbackServer) {
-      return callbackServer;
-    }
-    const defaultPort =
-      callbackPort ??
-      (await authStore.getPersistenceFile(config.url, "callback-port"));
-    callbackServer = await setupCallbackServer({
-      defaultPort,
-      timeoutMs: options?.oauthTimeoutMs,
-    });
-    callbackPort = callbackServer.callbackPort;
-    if (defaultPort !== callbackServer.callbackPort) {
-      await authStore.savePersistenceFile(
-        config.url,
-        "callback-port",
-        callbackServer.callbackPort,
-      );
-      if (
-        persistedPort !== undefined &&
-        persistedPort !== callbackServer.callbackPort
-      ) {
-        await Promise.all([
-          authStore
-            .deletePersistenceFile(config.url, "client")
-            .catch(() => undefined),
-          authStore
-            .deletePersistenceFile(config.url, "tokens")
-            .catch(() => undefined),
-          authStore
-            .deletePersistenceFile(config.url, "verifier")
-            .catch(() => undefined),
-        ]);
-      }
-    }
-    return callbackServer;
-  };
-
-  const selectedCallbackPort =
-    callbackPort ?? (await ensureCallbackServer()).callbackPort;
+  if (defaultPort !== callbackPort) {
+    await authStore.saveCallbackServerPort(callbackPort);
+  }
 
   const { provider } = await ProxyOAuthClientProvider.create({
     remoteMcpServerUrl: config.url,
     authorizeResource: undefined,
-    callbackPort: selectedCallbackPort,
+    callbackPort,
   });
 
   const tokens = await provider.tokens();
@@ -99,13 +52,8 @@ export const createTransport = async (
       });
 
       provider.setAwaitAuthCompleted(async () => {
-        const currentServer = await ensureCallbackServer();
-        try {
-          const code = await currentServer.awaitAuthorizationCode();
-          await transport.finishAuth(code);
-        } finally {
-          callbackServer = undefined;
-        }
+        const code = await awaitAuthorizationCode();
+        await transport.finishAuth(code);
       });
 
       return { transport };
@@ -129,13 +77,8 @@ export const createTransport = async (
       });
 
       provider.setAwaitAuthCompleted(async () => {
-        const currentServer = await ensureCallbackServer();
-        try {
-          const code = await currentServer.awaitAuthorizationCode();
-          await transport.finishAuth(code);
-        } finally {
-          callbackServer = undefined;
-        }
+        const code = await awaitAuthorizationCode();
+        await transport.finishAuth(code);
       });
 
       return { transport };

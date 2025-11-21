@@ -14,35 +14,9 @@ program
   .version(packageJson.version)
   .description(packageJson.description)
   .argument("<config-file-path>", "config file to migrate")
-  .option(
-    "--oauth-timeout <seconds>",
-    "Time (in seconds) to wait for OAuth authorization before aborting (default: 300)",
-  )
-  .action(
-    async (
-      configFilePath: string,
-      options: {
-        oauthTimeout?: string;
-      },
-    ) => {
-      const oauthTimeoutMs = (() => {
-        if (options.oauthTimeout === undefined) {
-          return undefined;
-        }
-        const parsed = Number.parseInt(options.oauthTimeout, 10);
-        if (Number.isNaN(parsed) || parsed <= 0) {
-          throw new Error(
-            "--oauth-timeout must be a positive integer (seconds)",
-          );
-        }
-        return parsed * 1000;
-      })();
-
-      await mcpAction(configFilePath, {
-        oauthTimeoutMs,
-      });
-    },
-  );
+  .action(async (configFilePath: string) => {
+    await mcpAction(configFilePath);
+  });
 
 program
   .command("migrate")

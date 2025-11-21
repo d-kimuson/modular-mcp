@@ -16,58 +16,40 @@ if (!existsSync(oauthServersDirectory)) {
   mkdirSync(oauthServersDirectory, { recursive: true });
 }
 
-const sanitizeSegment = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-const getServerDirectoryName = (serverUrl: string) => {
-  try {
-    const url = new URL(serverUrl);
-    const hostPart = sanitizeSegment(url.hostname) || "server";
-    const pathSegments = url.pathname
-      .split("/")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((segment) => sanitizeSegment(segment))
-      .filter(Boolean);
-    const descriptor =
-      pathSegments.length > 0
-        ? `${hostPart}__${pathSegments.join("_")}`
-        : hostPart;
-    const hash = createHash("sha256")
-      .update(url.href)
-      .digest("hex")
-      .slice(0, 8);
-    return `${descriptor}-${hash}`;
-  } catch {
-    const fallbackHash = createHash("sha256")
-      .update(serverUrl)
-      .digest("hex")
-      .slice(0, 8);
-    return `server-${fallbackHash}`;
-  }
-};
-
-const getOAuthServerBasePath = (serverUrl: string) =>
-  resolve(oauthServersDirectory, getServerDirectoryName(serverUrl));
-
-const ensureServerDirectory = (serverUrl: string) => {
-  const basePath = getOAuthServerBasePath(serverUrl);
-  if (!existsSync(basePath)) {
-    mkdirSync(basePath, { recursive: true });
-  }
-  return basePath;
-};
-
 export class AuthStore {
+  public async getPreviousCallbackServerPort() {
+    const path = resolve(moduleMcpDirectory, "callback-server-port.txt");
+    try {
+      return Number.parseInt(
+        await readFile(path, "utf-8").then((text) => text.trim()),
+        10,
+      );
+    } catch {
+      return undefined;
+    }
+  }
+
+  public async saveCallbackServerPort(port: number) {
+    try {
+      await writeFile(
+        resolve(moduleMcpDirectory, "callback-server-port.txt"),
+        port.toString(),
+        "utf-8",
+      );
+    } catch {
+      // do nothing
+    }
+  }
+
   public async getPersistenceFile<K extends PersistenceFileKind>(
     serverUrl: string,
     kind: K,
   ): Promise<PersistenceFileContent[K] | undefined> {
     try {
-      const basePath = getOAuthServerBasePath(serverUrl);
+      const basePath = resolve(
+        oauthServersDirectory,
+        createHash("md5").update(serverUrl).digest("hex"),
+      );
 
       if (kind === "client") {
         try {
@@ -94,15 +76,6 @@ export class AuthStore {
         )) satisfies PersistenceFileContent["verifier"] as PersistenceFileContent[K];
       }
 
-      if (kind === "callback-port") {
-        return Number.parseInt(
-          await readFile(resolve(basePath, "callback-port.txt"), "utf-8").then(
-            (text) => text.trim(),
-          ),
-          10,
-        ) satisfies PersistenceFileContent["callback-port"] as PersistenceFileContent[K];
-      }
-
       kind satisfies never;
       throw new Error(`Invalid kind: ${kind}`);
     } catch {
@@ -115,7 +88,14 @@ export class AuthStore {
     kind: K,
     content: PersistenceFileContent[K],
   ): Promise<void> {
-    const basePath = ensureServerDirectory(serverUrl);
+    const basePath = resolve(
+      oauthServersDirectory,
+      createHash("md5").update(serverUrl).digest("hex"),
+    );
+
+    if (!existsSync(basePath)) {
+      mkdirSync(basePath, { recursive: true });
+    }
 
     if (kind === "client") {
       await writeFile(
@@ -144,15 +124,6 @@ export class AuthStore {
       return;
     }
 
-    if (kind === "callback-port") {
-      await writeFile(
-        resolve(basePath, "callback-port.txt"),
-        content.toString(),
-        "utf-8",
-      );
-      return;
-    }
-
     kind satisfies never;
     throw new Error(`Invalid kind: ${kind}`);
   }
@@ -161,25 +132,23 @@ export class AuthStore {
     serverUrl: string,
     kind: K,
   ): Promise<void> {
-    const basePath = getOAuthServerBasePath(serverUrl);
+    const basePath = resolve(
+      oauthServersDirectory,
+      createHash("md5").update(serverUrl).digest("hex"),
+    );
 
     if (kind === "verifier") {
-      await rm(resolve(basePath, "verifier.txt"), { force: true });
+      await rm(resolve(basePath, "verifier.txt"));
       return;
     }
 
     if (kind === "tokens") {
-      await rm(resolve(basePath, "tokens.json"), { force: true });
+      await rm(resolve(basePath, "tokens.json"));
       return;
     }
 
     if (kind === "client") {
-      await rm(resolve(basePath, "client.json"), { force: true });
-      return;
-    }
-
-    if (kind === "callback-port") {
-      await rm(resolve(basePath, "callback-port.txt"), { force: true });
+      await rm(resolve(basePath, "client.json"));
       return;
     }
 
