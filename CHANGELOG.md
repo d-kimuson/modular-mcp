@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.9
+
+### &nbsp;&nbsp;&nbsp;Bug Fixes
+
+- Restrict env var substitution to ${VAR} syntax only with graceful fallback &nbsp;-&nbsp; by **d-kimsuon** and **Claude** [<samp>(ba641)</samp>](https://github.com/d-kimuson/modular-mcp/commit/ba64108)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/d-kimuson/modular-mcp/compare/v0.0.8...0.0.9)
+
 ## 0.0.8
 
 ### &nbsp;&nbsp;&nbsp;Bug Fixes
